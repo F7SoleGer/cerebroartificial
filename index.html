@@ -2950,6 +2950,26 @@ function scrollToAplic(idx) { scrollToSection('aplic-scroll',    'aplic', idx); 
     IDE: 27, /* Ideia           */
     ARG: 28, /* Argumento       */
     PAD: 29, /* Padrão          */
+    STR: 30, /* Estrutura       */
+    FLX: 31, /* Fluxo           */
+    OBS: 32, /* Obsidian        */
+    CLA: 33, /* Claude          */
+    ITG: 34, /* Integração      */
+    CRI: 35, /* Criatividade    */
+    APR: 36, /* Aprendizado     */
+    CUR: 37, /* Curadoria       */
+    RCP: 38, /* Recuperação     */
+    ESC: 39, /* Escrita         */
+    TES: 40, /* Tese            */
+    AUT: 41, /* Automação       */
+    MET: 42, /* Metadados       */
+    VIN: 43, /* Vínculo         */
+    FOC: 44, /* Foco            */
+    ONT: 45, /* Ontologia       */
+    VOC: 46, /* Vocabulário     */
+    REP: 47, /* Repetição       */
+    FBK: 48, /* Feedback        */
+    ITR: 49, /* Iteração        */
   };
 
   const DEFS = [
@@ -2983,25 +3003,85 @@ function scrollToAplic(idx) { scrollToSection('aplic-scroll',    'aplic', idx); 
     { label: 'Ideia',           c: G, r: 5  },             /* N.IDE */
     { label: 'Argumento',       c: G, r: 4  },             /* N.ARG */
     { label: 'Padrão',          c: T, r: 5  },             /* N.PAD */
+    { label: 'Estrutura',       c: M, r: 5  },             /* N.STR */
+    { label: 'Fluxo',           c: T, r: 4  },             /* N.FLX */
+    { label: 'Obsidian',        c: B, r: 6  },             /* N.OBS */
+    { label: 'Claude',          c: B, r: 6  },             /* N.CLA */
+    { label: 'Integração',      c: P, r: 5  },             /* N.ITG */
+    { label: 'Criatividade',    c: T, r: 5  },             /* N.CRI */
+    { label: 'Aprendizado',     c: T, r: 4  },             /* N.APR */
+    { label: 'Curadoria',       c: G, r: 4  },             /* N.CUR */
+    { label: 'Recuperação',     c: M, r: 4  },             /* N.RCP */
+    { label: 'Escrita',         c: G, r: 5  },             /* N.ESC */
+    { label: 'Tese',            c: G, r: 4  },             /* N.TES */
+    { label: 'Automação',       c: B, r: 5  },             /* N.AUT */
+    { label: 'Metadados',       c: M, r: 3  },             /* N.MET */
+    { label: 'Vínculo',         c: P, r: 4  },             /* N.VIN */
+    { label: 'Foco',            c: T, r: 3  },             /* N.FOC */
+    { label: 'Ontologia',       c: P, r: 4  },             /* N.ONT */
+    { label: 'Vocabulário',     c: M, r: 4  },             /* N.VOC */
+    { label: 'Repetição',       c: T, r: 3  },             /* N.REP */
+    { label: 'Feedback',        c: M, r: 3  },             /* N.FBK */
+    { label: 'Iteração',        c: B, r: 3  },             /* N.ITR */
   ];
 
   const { SC,MC,INT,CON,ZK,CAP,ORG,AMP,DOT,EST,SIN,ARQ,CNX,GRF,
-          LEI,MEM,PRD,CTX,NOT,TAG,PES,REF,ANL,REV,PRM,INS,DEC,IDE,ARG,PAD } = N;
+          LEI,MEM,PRD,CTX,NOT,TAG,PES,REF,ANL,REV,PRM,INS,DEC,IDE,ARG,PAD,
+          STR,FLX,OBS,CLA,ITG,CRI,APR,CUR,RCP,ESC,TES,AUT,MET,VIN,FOC,ONT,VOC,REP,FBK,ITR } = N;
 
   const LINKS = [
-    [SC,MC],[SC,INT],[SC,CON],[SC,DOT],[SC,LEI],[SC,MEM],[SC,PRD],[SC,INS],[SC,PAD],
-    [MC,ARQ],[MC,CNX],[MC,GRF],[MC,CAP],[MC,ORG],[MC,AMP],[MC,REV],[MC,NOT],[MC,TAG],[MC,PES],[MC,REF],
-    [INT,SIN],[INT,ANL],[INT,PRM],[INT,CON],
-    [CON,ZK],[CON,LEI],[CON,INS],
-    [DOT,EST],[DOT,IDE],[DOT,ARG],
+    /* hubs principais */
+    [SC,MC],[SC,INT],[SC,CON],[SC,DOT],[SC,LEI],[SC,MEM],[SC,PRD],[SC,INS],[SC,PAD],[SC,OBS],[SC,CLA],
+    [MC,ARQ],[MC,CNX],[MC,GRF],[MC,CAP],[MC,ORG],[MC,AMP],[MC,REV],[MC,NOT],[MC,TAG],[MC,PES],[MC,REF],[MC,STR],
+    [INT,SIN],[INT,ANL],[INT,PRM],[INT,CON],[INT,CLA],[INT,AUT],
+    /* conhecimento e aprendizado */
+    [CON,ZK],[CON,LEI],[CON,INS],[CON,APR],[CON,ONT],
+    [LEI,MEM],[LEI,APR],[LEI,REP],[LEI,CUR],
+    [MEM,PRD],[MEM,REP],[MEM,FOC],[MEM,RCP],
+    [ZK,NOT],[ZK,TAG],[ZK,ONT],
+    [APR,REP],[APR,FOC],
+    /* produção intelectual */
+    [PRD,IDE],[PRD,ESC],[PRD,FBK],[PRD,ITR],
+    [INS,PAD],[INS,PRD],[INS,LEI],[INS,CRI],
+    [IDE,CRI],[IDE,ESC],[IDE,VIN],
+    [ESC,ARG],[ESC,SIN],[ESC,TES],
+    [ARG,DOT],[ARG,TES],
     [SIN,ANL],[SIN,MC],
-    [ARQ,CNX],[ARQ,GRF],[ARQ,NOT],
-    [ZK,NOT],[ZK,TAG],
-    [LEI,MEM],[MEM,PRD],[PRD,IDE],
-    [INS,PAD],[INS,PRD],[INS,LEI],
-    [ANL,PRM],[PRM,SIN],
-    [CTX,MC],[CTX,SC],
+    [TES,DOT],[TES,ANL],
+    /* ferramentas */
+    [OBS,ARQ],[OBS,CNX],[OBS,GRF],[OBS,NOT],[OBS,ITG],[OBS,VIN],
+    [CLA,PRM],[CLA,ANL],[CLA,AUT],[CLA,ITG],
+    [ITG,AUT],[ITG,MC],
+    [ARQ,CNX],[ARQ,GRF],[ARQ,NOT],[ARQ,RCP],[ARQ,MET],
+    /* organização e estrutura */
+    [STR,CAP],[STR,FLX],[STR,VOC],
+    [CAP,FLX],[CAP,CUR],[CAP,MET],
+    [NOT,MET],[NOT,TAG],[NOT,VOC],
+    [TAG,ONT],[TAG,MET],
+    [CTX,MC],[CTX,SC],[CTX,FOC],
+    [FOC,FLX],[FOC,PRD],
+    [FLX,ITR],[ORG,STR],[ORG,FLX],
+    /* doutrina e jurídico */
+    [DOT,EST],[DOT,IDE],[DOT,RCP],
+    [EST,DEC],
+    /* ia e automação */
+    [AUT,PRM],[AUT,FBK],[AUT,ITR],
+    [PRM,SIN],[PRM,ANL],
+    [ANL,FBK],[ANL,DEC],[ANL,ITR],
+    [AMP,CLA],[AMP,AUT],[AMP,INT],
+    /* outros */
+    [REF,PES],[REF,CUR],
+    [PES,RCP],[RCP,MEM],
     [DEC,SC],[DEC,CON],
+    [CRI,INS],[CRI,CNX],[CRI,ESC],
+    [CUR,VOC],[CUR,REF],
+    [REP,NOT],
+    [FBK,DEC],
+    [VIN,CNX],[VIN,GRF],
+    [ONT,CON],
+    [VOC,MC],
+    [PAD,INS],[PAD,CON],
+    [REV,MC],[REV,NOT],
   ];
 
   let W, H, nodes = [];
@@ -3016,7 +3096,7 @@ function scrollToAplic(idx) { scrollToSection('aplic-scroll',    'aplic', idx); 
     const cx = W / 2, cy = H / 2;
     nodes = DEFS.map((d, i) => {
       const angle  = (i / DEFS.length) * Math.PI * 2;
-      const orbit  = d.hub ? 120 : 95 + Math.random() * 290;
+      const orbit  = d.hub ? 120 : 80 + Math.random() * 340;
       const jitter = d.hub ? 0 : (Math.random() - 0.5) * 70;
       return {
         ...d,
@@ -3042,7 +3122,7 @@ function scrollToAplic(idx) { scrollToSection('aplic-scroll',    'aplic', idx); 
     tick._last = now;
 
     glowAccum += dt;
-    if (glowAccum >= 1400) {
+    if (glowAccum >= 1000) {
       glowAccum = 0;
       if (nodes[ai]) nodes[ai].glow = false;
       ai = Math.floor(Math.random() * nodes.length);
@@ -3077,13 +3157,13 @@ function scrollToAplic(idx) { scrollToSection('aplic-scroll',    'aplic', idx); 
       const ax = na.x + na.ox, ay = na.y + na.oy;
       const bx = nb.x + nb.ox, by = nb.y + nb.oy;
       const dist  = Math.hypot(bx - ax, by - ay);
-      const alpha = Math.max(0, 1 - dist / 440);
+      const alpha = Math.max(0, 1 - dist / 600);
       const hot   = na.glow || nb.glow;
 
       ctx.beginPath();
       ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
-      ctx.strokeStyle = hot ? G + (alpha * 0.68) + ')' : M + (alpha * 0.18) + ')';
-      ctx.lineWidth   = hot ? 1.1 : 0.5;
+      ctx.strokeStyle = hot ? G + (alpha * 0.72) + ')' : M + (alpha * 0.28) + ')';
+      ctx.lineWidth   = hot ? 1.3 : 0.65;
       ctx.stroke();
 
       if (hot && alpha > 0.28) {
