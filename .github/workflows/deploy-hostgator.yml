@@ -1,0 +1,56 @@
+name: Deploy HostGator + Supabase
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-hostgator
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inject Supabase keys into assets/app.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          python3 - <<'EOF'
+          import os, pathlib
+          target = pathlib.Path("assets/app.js")
+          js = target.read_text()
+          js = js.replace("__SUPABASE_URL__", os.environ.get("SUPABASE_URL", ""))
+          js = js.replace("__SUPABASE_ANON_KEY__", os.environ.get("SUPABASE_ANON_KEY", ""))
+          target.write_text(js)
+          if "__SUPABASE_URL__" in js or "__SUPABASE_ANON_KEY__" in js:
+              raise SystemExit("Secrets não foram totalmente substituídos.")
+          EOF
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Deploy Supabase Edge Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -e
+          for fn in submit-lead submit-pedido create-pix-payment create-credit-payment check-pix-status; do
+            echo "── deploy $fn ──"
+            npx -y supabase@latest functions deploy "$fn" \
+              --project-ref ynaeybytorspfsdvikzb --no-verify-jwt
+          done
+
+      - name: Upload site to HostGator (cPanel API)
+        env:
+          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+          CPANEL_USERNAME: ${{ secrets.CPANEL_USERNAME }}
+          CPANEL_API_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
+          CPANEL_DEPLOY_DIR: ${{ secrets.CPANEL_DEPLOY_DIR }}
+        run: bash scripts/cpanel-deploy.sh

@@ -1,0 +1,27 @@
+# Método C.A — HostGator/Apache
+Options -MultiViews +FollowSymLinks
+DirectoryIndex index.html
+
+# Pretty URLs: append trailing slash for directories so /conceito → /conceito/
+RewriteEngine On
+RewriteBase /
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^(.+[^/])$ /$1/ [L,R=301]
+
+# 404 fallback
+ErrorDocument 404 /404.html
+
+# Cache estático moderado
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|svg|png|jpg|jpeg|gif|ico|pdf|woff2?)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# Compressão
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
