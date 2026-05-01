@@ -23,6 +23,17 @@ set -euo pipefail
 : "${CPANEL_API_TOKEN:?CPANEL_API_TOKEN não definido}"
 : "${CPANEL_DEPLOY_DIR:?CPANEL_DEPLOY_DIR não definido}"
 
+# Sanitiza host: remove https:// http:// e barra/porta extras se vierem na secret
+CPANEL_HOST="${CPANEL_HOST#https://}"
+CPANEL_HOST="${CPANEL_HOST#http://}"
+CPANEL_HOST="${CPANEL_HOST%%/*}"
+CPANEL_HOST="${CPANEL_HOST%%:*}"
+# Sanitiza deploy_dir: remove barras de início e fim
+CPANEL_DEPLOY_DIR="${CPANEL_DEPLOY_DIR#/}"
+CPANEL_DEPLOY_DIR="${CPANEL_DEPLOY_DIR%/}"
+
+echo "── alvo: cpanel ${CPANEL_USERNAME}@${CPANEL_HOST}:2083 → /${CPANEL_DEPLOY_DIR} ──"
+
 API_BASE="https://${CPANEL_HOST}:2083/execute"
 AUTH_HDR="Authorization: cpanel ${CPANEL_USERNAME}:${CPANEL_API_TOKEN}"
 REMOTE_ROOT="/${CPANEL_DEPLOY_DIR}"
