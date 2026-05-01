@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conceito — Método C.A</title>
+<meta name="description" content="O que é um Cérebro Artificial: extensão cognitiva, princípios e diferencial do Método C.A.">
+<link rel="canonical" href="https://ca.franklingmendes.com/conceito/">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body data-page="conceito">
+
+<canvas id="graph-canvas" aria-hidden="true"></canvas>
+
+<nav>
+  <a class="nav-logo" href="/">Método <em>C.A</em></a>
+  <ul class="nav-links">
+    <li><a href="/"             id="nav-home">Home</a></li>
+    <li><a href="/conceito/"    id="nav-conceito"    class="active">Conceito</a></li>
+    <li><a href="/metodo/"      id="nav-metodo">Método</a></li>
+    <li><a href="/ferramentas/" id="nav-ferramentas">Ferramentas</a></li>
+    <li><a href="/aplicacoes/"  id="nav-aplicacoes">Aplicações</a></li>
+  </ul>
+</nav>
+
+<div class="page" id="page-conceito">
+  <div class="conceito-wrap">
+
+    <div class="conceito-left">
+      <p class="conceito-section-label">01 — Conceito</p>
+      <h2 class="conceito-heading">O que é um<br><em>Cérebro</em><br>Artificial?</h2>
+      <p class="conceito-lead">
+        Uma extensão cognitiva construída para capturar, organizar e
+        amplificar tudo que você sabe — sem depender da memória biológica.
+      </p>
+
+      <nav class="conceito-progress" aria-label="Seções">
+        <div class="prog-item active" onclick="scrollToBlock(0)">
+          <div class="prog-dot"></div>
+          <span class="prog-label">O Problema</span>
+        </div>
+        <div class="prog-item" onclick="scrollToBlock(1)">
+          <div class="prog-dot"></div>
+          <span class="prog-label">A Definição</span>
+        </div>
+        <div class="prog-item" onclick="scrollToBlock(2)">
+          <div class="prog-dot"></div>
+          <span class="prog-label">Os Princípios</span>
+        </div>
+        <div class="prog-item" onclick="scrollToBlock(3)">
+          <div class="prog-dot"></div>
+          <span class="prog-label">Para Quem</span>
+        </div>
+        <div class="prog-item" onclick="scrollToBlock(4)">
+          <div class="prog-dot"></div>
+          <span class="prog-label">O Diferencial</span>
+        </div>
+      </nav>
+    </div>
+
+    <div class="conceito-right" id="conceito-scroll">
+
+      <div class="concept-block" data-block="0">
+        <div class="cb-number">01</div>
+        <h3 class="cb-title">O problema que nenhuma<br>agenda resolve</h3>
+        <div class="cb-divider"></div>
+        <p class="cb-body">
+          O trabalhador do conhecimento moderno consome centenas de páginas por mês —
+          processos jurídicos, relatórios de negócios, literatura técnica, doutrina,
+          pesquisas acadêmicas. A maior parte desaparece em dias. Não por falta de
+          esforço, mas porque o cérebro humano não foi projetado para armazenar
+          informação estruturada em larga escala.
+        </p>
+        <p class="cb-body">
+          O que não é registrado, conectado e revisitado torna-se ruído. Reuniões
+          ocorrem sem contexto. Decisões se repetem sem aprendizado acumulado.
+          O profissional mais competente fica refém de sua própria memória de curto prazo.
+        </p>
+        <div class="cb-quote">
+          <p>"A mente existe para ter ideias — não para as armazenar."</p>
+        </div>
+        <div class="cb-stats">
+          <div class="cb-stat">
+            <div class="cb-stat-num">90%</div>
+            <div class="cb-stat-label">do que lemos é esquecido em 72 horas</div>
+          </div>
+          <div class="cb-stat">
+            <div class="cb-stat-num">2.5h</div>
+            <div class="cb-stat-label">perdidas por dia procurando informação</div>
+          </div>
+          <div class="cb-stat">
+            <div class="cb-stat-num">40%</div>
+            <div class="cb-stat-label">das decisões sem contexto histórico</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="concept-block" data-block="1">
+        <div class="cb-number">02</div>
+        <h3 class="cb-title">Um sistema vivo de<br><em>conhecimento pessoal</em></h3>
+        <div class="cb-divider"></div>
+        <p class="cb-body">
+          Um Cérebro Artificial — ou segundo cérebro — é um sistema externo, digital
+          e pessoal que funciona como extensão cognitiva de quem o constrói. Não é
+          uma pasta de arquivos. Não é um bloco de notas. É uma estrutura viva onde
+          cada ideia se conecta a outra, onde o conhecimento se acumula e se torna
+          produtivo com o tempo.
+        </p>
+        <p class="cb-body">
+          Diferente de ferramentas de produtividade convencionais, o Método C.A
+          integra captura de conhecimento, organização semântica e amplificação
+          por inteligência artificial — formando um ciclo contínuo entre o que você
+          aprende e o que você produz.
+        </p>
+        <div class="cb-quote">
+          <p>"Não basta ler. É preciso construir uma arquitetura do que se sabe."</p>
+        </div>
+      </div>
+
+      <div class="concept-block" data-block="2">
+        <div class="cb-number">03</div>
+        <h3 class="cb-title">Os três princípios<br>que sustentam o método</h3>
+        <div class="cb-divider"></div>
+        <p class="cb-body">
+          <strong style="color:var(--light); font-weight:500;">Capturar.</strong> Toda informação relevante é registrada no momento em que surge —
+          sem fricção, sem adiamento. Uma ideia não capturada é uma ideia perdida.
+        </p>
+        <p class="cb-body">
+          <strong style="color:var(--light); font-weight:500;">Conectar.</strong> O valor não está nos dados isolados, mas nas relações entre eles.
+          Conceitos jurídicos dialogam com casos práticos. Estratégias empresariais
+          se vinculam a referências históricas. O conhecimento torna-se uma rede,
+          não uma lista.
+        </p>
+        <p class="cb-body">
+          <strong style="color:var(--light); font-weight:500;">Amplificar.</strong> A inteligência artificial atua sobre esse repositório pessoal
+          como um interlocutor treinado no seu próprio pensamento — aprofundando
+          análises, gerando sínteses e acelerando a produção intelectual sem substituir
+          o raciocínio humano.
+        </p>
+      </div>
+
+      <div class="concept-block" data-block="3">
+        <div class="cb-number">04</div>
+        <h3 class="cb-title">Para quem este<br><em>método foi desenhado</em></h3>
+        <div class="cb-divider"></div>
+        <p class="cb-body">
+          O Método C.A foi concebido para profissionais cujo principal ativo é o
+          conhecimento — e cuja produção depende diretamente da capacidade de
+          organizar, recuperar e articular o que sabem.
+        </p>
+        <p class="cb-body">
+          Juristas que precisam cruzar doutrina, jurisprudência e argumentação em
+          tempo real. Empresários que tomam decisões estratégicas em contextos de
+          alta complexidade e incerteza. Escritores e pesquisadores que constroem
+          obras a partir de anos de leitura e investigação. Estudantes que precisam
+          converter volume de conteúdo em domínio real de conhecimento.
+        </p>
+        <div class="cb-profiles">
+          <span class="cb-tag">Juristas</span>
+          <span class="cb-tag">Empresários</span>
+          <span class="cb-tag">Escritores</span>
+          <span class="cb-tag">Pesquisadores</span>
+          <span class="cb-tag">Estudantes</span>
+          <span class="cb-tag">Gestores</span>
+        </div>
+      </div>
+
+      <div class="concept-block" data-block="4">
+        <div class="cb-number">05</div>
+        <h3 class="cb-title">O que distingue o Método C.A<br>de qualquer outra abordagem</h3>
+        <div class="cb-divider"></div>
+        <p class="cb-body">
+          A maioria dos sistemas de organização pessoal trata o conhecimento como
+          arquivo — algo que se guarda e eventualmente se recupera. O Método C.A
+          trata o conhecimento como capital — algo que se investe, se conecta e
+          gera retorno composto com o tempo.
+        </p>
+        <p class="cb-body">
+          Quanto mais você usa o sistema, mais ele entende o seu pensamento.
+          Quanto mais você registra, mais conexões emergem. Quanto mais conexões
+          emergem, mais a inteligência artificial consegue operar com precisão
+          sobre o seu contexto específico — e não sobre generalidades.
+        </p>
+        <div class="cb-quote">
+          <p>"Conhecimento composto: cada ideia registrada aumenta o valor de todas as outras."</p>
+        </div>
+      </div>
+
+      <div class="conceito-cta">
+        <p class="conceito-cta-label">Próximo passo</p>
+        <p class="conceito-cta-text">Conheça o <em>Método</em> — como estruturar seu Cérebro Artificial do zero ao avançado.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <a class="btn-gold" href="/metodo/">
+            Ver o Método
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <a class="btn-comece" href="/cadastro/">
+            Comece Agora
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/assets/app.js"></script>
+</body>
+</html>

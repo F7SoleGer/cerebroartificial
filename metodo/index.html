@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Método — Método C.A</title>
+<meta name="description" content="As quatro fases progressivas do Método C.A para construir um Cérebro Artificial: Estrutura, Captura, Conexão e Amplificação.">
+<link rel="canonical" href="https://ca.franklingmendes.com/metodo/">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body data-page="metodo">
+
+<canvas id="graph-canvas" aria-hidden="true"></canvas>
+
+<nav>
+  <a class="nav-logo" href="/">Método <em>C.A</em></a>
+  <ul class="nav-links">
+    <li><a href="/"             id="nav-home">Home</a></li>
+    <li><a href="/conceito/"    id="nav-conceito">Conceito</a></li>
+    <li><a href="/metodo/"      id="nav-metodo"      class="active">Método</a></li>
+    <li><a href="/ferramentas/" id="nav-ferramentas">Ferramentas</a></li>
+    <li><a href="/aplicacoes/"  id="nav-aplicacoes">Aplicações</a></li>
+  </ul>
+</nav>
+
+<div class="page" id="page-metodo">
+  <div class="metodo-wrap">
+
+    <div class="metodo-left">
+      <p class="metodo-section-label">02 — Método</p>
+      <h2 class="metodo-heading">Como se <em>constrói</em><br>um Cérebro<br>Artificial</h2>
+      <p class="metodo-lead">
+        Quatro fases progressivas. Cada uma transforma a relação entre
+        o que você aprende e o que você é capaz de produzir.
+      </p>
+      <div class="metodo-timeline">
+        <div class="mt-item active" onclick="scrollToPhase(0)">
+          <div class="mt-dot"></div>
+          <span class="mt-label">Estrutura</span>
+          <span class="mt-phase">Fase I</span>
+        </div>
+        <div class="mt-item" onclick="scrollToPhase(1)">
+          <div class="mt-dot"></div>
+          <span class="mt-label">Captura</span>
+          <span class="mt-phase">Fase II</span>
+        </div>
+        <div class="mt-item" onclick="scrollToPhase(2)">
+          <div class="mt-dot"></div>
+          <span class="mt-label">Conexão</span>
+          <span class="mt-phase">Fase III</span>
+        </div>
+        <div class="mt-item" onclick="scrollToPhase(3)">
+          <div class="mt-dot"></div>
+          <span class="mt-label">Amplificação</span>
+          <span class="mt-phase">Fase IV</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="metodo-right" id="metodo-scroll">
+
+      <div class="phase-block" data-phase="0">
+        <div class="pb-phase-tag">
+          <span class="pb-phase-num">Fase I</span>
+          <div class="pb-phase-line"></div>
+          <span class="pb-phase-name">Estrutura</span>
+        </div>
+        <h3 class="pb-title">Antes de capturar, é preciso<br><em>construir o território</em></h3>
+        <p class="pb-body">
+          A maioria das pessoas começa acumulando informação sem ter um sistema de
+          destino. O resultado é o mesmo caos digital que tentavam combater — pastas
+          sem critério, arquivos sem contexto, notas sem conexão.
+        </p>
+        <p class="pb-body">
+          A primeira fase do Método C.A é deliberadamente lenta. Você define
+          as grandes áreas do seu conhecimento, estabelece uma taxonomia pessoal e
+          cria uma arquitetura que vai durar anos. Esta decisão, feita uma vez com
+          cuidado, elimina milhares de micro-decisões futuras.
+        </p>
+        <div class="pb-quote">
+          <p>"A organização não é um fim em si mesma. É a fundação sobre a qual o pensamento se torna produtivo."</p>
+        </div>
+        <div class="pb-practices">
+          <div class="pb-practice">
+            <div class="pb-practice-idx">I</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Defina suas áreas de conhecimento</div>
+              <div class="pb-practice-desc">Identifique as três a cinco grandes domínios que estruturam sua vida profissional e intelectual. Jurisprudência, estratégia corporativa, teoria literária — o que for central para você.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">II</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Crie um sistema de entrada neutro</div>
+              <div class="pb-practice-desc">Todo conteúdo entra primeiro em um ponto único de captura, sem classificação imediata. A triagem vem depois — nunca interrompa o fluxo de captura com decisões de organização.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">III</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Estabeleça um vocabulário próprio</div>
+              <div class="pb-practice-desc">Defina os termos, categorias e marcadores que você usará de forma consistente. Um sistema pessoal de classificação que reflita como você realmente pensa — não como os outros organizam.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phase-block" data-phase="1">
+        <div class="pb-phase-tag">
+          <span class="pb-phase-num">Fase II</span>
+          <div class="pb-phase-line"></div>
+          <span class="pb-phase-name">Captura</span>
+        </div>
+        <h3 class="pb-title">Registrar sem esforço,<br><em>sem interrupção</em></h3>
+        <p class="pb-body">
+          A captura eficaz não é sobre disciplina. É sobre fricção zero. Quando o
+          ato de registrar exige mais esforço do que o valor percebido da informação,
+          o hábito não se sustenta. A segunda fase do método elimina esta fricção.
+        </p>
+        <p class="pb-body">
+          Trechos de leitura, argumentos que chamam atenção, dados de mercado,
+          observações de reuniões, reflexões pessoais — tudo capturado no momento
+          em que surge, com contexto mínimo suficiente para ser compreendido no futuro.
+        </p>
+        <div class="pb-principles">
+          <div class="pb-principle">
+            <div class="pb-principle-label">Critério de captura</div>
+            <div class="pb-principle-text">Capture o que surpreende, contradiz ou confirma algo que você já sabe. O critério não é "importante" — é "relevante para o seu pensamento".</div>
+          </div>
+          <div class="pb-principle">
+            <div class="pb-principle-label">Contexto mínimo</div>
+            <div class="pb-principle-text">Toda captura recebe fonte, data e uma frase de contexto. Sem isso, o registro torna-se ininteligível em seis meses.</div>
+          </div>
+          <div class="pb-principle">
+            <div class="pb-principle-label">Processamento diferido</div>
+            <div class="pb-principle-text">Capturar e classificar são atos distintos. O processamento ocorre em sessões dedicadas — nunca no meio do fluxo de leitura ou trabalho.</div>
+          </div>
+          <div class="pb-principle">
+            <div class="pb-principle-label">Volume sem culpa</div>
+            <div class="pb-principle-text">Capture mais do que acha necessário. O filtro vem depois. A captura excessiva custa pouco; a captura insuficiente é irreversível.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phase-block" data-phase="2">
+        <div class="pb-phase-tag">
+          <span class="pb-phase-num">Fase III</span>
+          <div class="pb-phase-line"></div>
+          <span class="pb-phase-name">Conexão</span>
+        </div>
+        <h3 class="pb-title">O valor emerge nas<br><em>relações entre ideias</em></h3>
+        <p class="pb-body">
+          Uma nota isolada é um fato. Duas notas conectadas são uma observação.
+          Dez notas interligadas são uma teoria. O trabalho intelectual de alto nível
+          não ocorre na captura — ocorre na criação de vínculos entre o que foi capturado.
+        </p>
+        <p class="pb-body">
+          Nesta fase, você revisa o que foi capturado e constrói deliberadamente
+          as pontes entre ideias de domínios diferentes. Um princípio de economia
+          comportamental que ilumina uma tese jurídica. Uma narrativa histórica que
+          estrutura uma estratégia empresarial. O conhecimento transversal é o que
+          separa os especialistas dos pensadores.
+        </p>
+        <div class="pb-quote">
+          <p>"Criatividade é conectar coisas. As mentes mais férteis são as que transitam entre domínios."</p>
+        </div>
+        <div class="pb-practices">
+          <div class="pb-practice">
+            <div class="pb-practice-idx">I</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Sessões de revisão semanal</div>
+              <div class="pb-practice-desc">Reserve tempo semanal para revisar capturas recentes, classificá-las e criar as primeiras conexões explícitas com o que já existe no sistema.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">II</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Links bidirecionais intencionais</div>
+              <div class="pb-practice-desc">Ao criar uma conexão, anote por que as duas ideias se relacionam. O link sem explicação é decorativo. O link com raciocínio é generativo.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">III</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Notas de síntese periódicas</div>
+              <div class="pb-practice-desc">A cada mês, produza sínteses que integrem múltiplas notas sobre um tema. Este exercício força a articulação do que foi aprendido e revela lacunas de compreensão.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phase-block" data-phase="3">
+        <div class="pb-phase-tag">
+          <span class="pb-phase-num">Fase IV</span>
+          <div class="pb-phase-line"></div>
+          <span class="pb-phase-name">Amplificação</span>
+        </div>
+        <h3 class="pb-title">Inteligência artificial operando<br>sobre <em>seu próprio contexto</em></h3>
+        <p class="pb-body">
+          A maioria das pessoas usa inteligência artificial sobre conhecimento genérico.
+          O Método C.A inverte esta lógica: a IA opera sobre o repositório pessoal
+          que você construiu — seus argumentos, suas referências, seu modo de pensar.
+        </p>
+        <p class="pb-body">
+          Quando o sistema já contém anos de pensamento estruturado, a IA não
+          substitui o raciocínio — ela o estende. Produz sínteses de documentos
+          extensos em segundos. Identifica contradições entre posições adotadas em
+          momentos diferentes. Sugere conexões entre áreas que você não havia
+          aproximado. Transforma o repositório de conhecimento em um interlocutor
+          inteligente treinado no seu próprio pensamento.
+        </p>
+        <div class="pb-quote">
+          <p>"IA generativa sem contexto pessoal é uma biblioteca pública. Com contexto, é um escritório particular."</p>
+        </div>
+        <div class="pb-practices">
+          <div class="pb-practice">
+            <div class="pb-practice-idx">I</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Consulta contextualizada</div>
+              <div class="pb-practice-desc">Ao fazer perguntas à IA, forneça sempre o contexto do seu repositório. Quanto mais específico o contexto, mais precisa e útil a resposta gerada.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">II</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Síntese e redação acelerada</div>
+              <div class="pb-practice-desc">Use a IA para transformar clusters de notas em rascunhos estruturados de artigos, pareceres, relatórios ou capítulos. O pensamento é seu — a velocidade de execução é amplificada.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">III</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Revisão crítica assistida</div>
+              <div class="pb-practice-desc">Submeta argumentos ao escrutínio da IA antes de posicionamentos públicos ou decisões estratégicas. Um interlocutor que não teme contradizer é um ativo raro.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">IV</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Integração direta com o repositório</div>
+              <div class="pb-practice-desc">Configure a IA para ler e escrever diretamente em seu sistema de notas, eliminando a fricção de copiar e colar. O ciclo entre captura, conexão e amplificação torna-se contínuo e automatizado.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="metodo-cta">
+        <p class="metodo-cta-label">Próximo passo</p>
+        <p class="metodo-cta-text">Pronto para começar? Acesse o material completo do <em>Método C.A</em> agora mesmo.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <a class="btn-comece" href="/cadastro/">
+            Comece Agora
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <a class="btn-outline" href="/ferramentas/">
+            Ver as Ferramentas
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/assets/app.js"></script>
+</body>
+</html>

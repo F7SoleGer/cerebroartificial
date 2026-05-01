@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferramentas — Método C.A</title>
+<meta name="description" content="A infraestrutura do pensamento produtivo: repositório de conhecimento, motor de inteligência e camada de integração.">
+<link rel="canonical" href="https://ca.franklingmendes.com/ferramentas/">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body data-page="ferramentas">
+
+<canvas id="graph-canvas" aria-hidden="true"></canvas>
+
+<nav>
+  <a class="nav-logo" href="/">Método <em>C.A</em></a>
+  <ul class="nav-links">
+    <li><a href="/"             id="nav-home">Home</a></li>
+    <li><a href="/conceito/"    id="nav-conceito">Conceito</a></li>
+    <li><a href="/metodo/"      id="nav-metodo">Método</a></li>
+    <li><a href="/ferramentas/" id="nav-ferramentas" class="active">Ferramentas</a></li>
+    <li><a href="/aplicacoes/"  id="nav-aplicacoes">Aplicações</a></li>
+  </ul>
+</nav>
+
+<div class="page" id="page-ferramentas">
+  <div class="ferr-wrap">
+
+    <div class="ferr-left">
+      <p class="ferr-section-label">03 — Ferramentas</p>
+      <h2 class="ferr-heading">A infra­estrutura<br>do <em>pensamento</em><br>produtivo</h2>
+      <p class="ferr-lead">
+        Três camadas tecnológicas, cada uma com uma função precisa.
+        Nenhuma é decorativa. Juntas, formam o sistema completo.
+      </p>
+      <div class="ferr-index">
+        <div class="fi-item active" onclick="scrollToFerr(0)">
+          <div class="fi-dot"></div>
+          <span class="fi-label">Repositório de Conhecimento</span>
+        </div>
+        <div class="fi-item" onclick="scrollToFerr(1)">
+          <div class="fi-dot"></div>
+          <span class="fi-label">Motor de Inteligência</span>
+        </div>
+        <div class="fi-item" onclick="scrollToFerr(2)">
+          <div class="fi-dot"></div>
+          <span class="fi-label">Camada de Integração</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ferr-right" id="ferr-scroll">
+
+      <div class="ferr-block" data-ferr="0">
+        <div class="fb-layer-tag">
+          <span class="fb-layer-num">Camada I</span>
+          <div class="fb-layer-line"></div>
+          <span class="fb-layer-name">Repositório de Conhecimento</span>
+        </div>
+        <h3 class="fb-title">O arquivo vivo onde<br><em>cada ideia tem endereço</em></h3>
+        <div class="fb-function">Armazenamento local e estruturado</div>
+        <p class="fb-body">
+          A primeira camada é o repositório — um editor de notas baseado em
+          arquivos de texto simples, armazenados integralmente no seu dispositivo.
+          Nenhum servidor externo. Nenhuma empresa com acesso ao seu pensamento.
+          Seus dados existem enquanto você existir, independente de qualquer
+          plataforma ou assinatura.
+        </p>
+        <p class="fb-body">
+          O que distingue esta ferramenta de qualquer outro editor de texto é a
+          capacidade de criar vínculos entre documentos — transformando um conjunto
+          de notas isoladas em uma rede de conhecimento navegável. Cada link
+          é uma ponte entre ideias. O grafo resultante torna visível a arquitetura
+          do seu pensamento.
+        </p>
+        <div class="fb-specs">
+          <div class="fb-spec">
+            <div class="fb-spec-key">Formato</div>
+            <div class="fb-spec-val">Texto simples com marcação leve. Legível por qualquer software, agora e daqui a décadas. Sem dependência de formato proprietário.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Armazenamento</div>
+            <div class="fb-spec-val">100% local. Seus arquivos residem no seu computador ou dispositivo. Compatível com qualquer sistema de backup ou sincronização de sua preferência.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Conexões</div>
+            <div class="fb-spec-val">Links bidirecionais entre documentos. Quando uma nota referencia outra, a referência aparece em ambas — revelando relações que você não havia percebido.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Visualização</div>
+            <div class="fb-spec-val">Grafo interativo que mapeia todas as conexões do repositório. Identifica nós centrais, lacunas e agrupamentos de conhecimento em um único olhar.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Extensibilidade</div>
+            <div class="fb-spec-val">Ecossistema de extensões que permite adaptar o sistema a fluxos de trabalho específicos — de revisão periódica a gestão de projetos e leitura anotada.</div>
+          </div>
+        </div>
+        <div class="fb-quote">
+          <p>"Um repositório pessoal bem construído é o ativo mais durável de um profissional do conhecimento."</p>
+        </div>
+      </div>
+
+      <div class="ferr-block" data-ferr="1">
+        <div class="fb-layer-tag">
+          <span class="fb-layer-num">Camada II</span>
+          <div class="fb-layer-line"></div>
+          <span class="fb-layer-name">Motor de Inteligência</span>
+        </div>
+        <h3 class="fb-title">O interlocutor que opera<br><em>sobre o que você sabe</em></h3>
+        <div class="fb-function">Processamento e amplificação por IA</div>
+        <p class="fb-body">
+          A segunda camada é um modelo de linguagem de grande escala — uma
+          inteligência artificial capaz de ler, sintetizar, criticar e expandir
+          qualquer conteúdo que você apresente. Não é um mecanismo de busca.
+          Não é um assistente de tarefas. É um interlocutor intelectual com
+          capacidade de processar volumes que nenhum humano consegue abarcar
+          em tempo útil.
+        </p>
+        <p class="fb-body">
+          Quando alimentado com o contexto do seu repositório pessoal, este motor
+          deixa de operar sobre conhecimento genérico e passa a operar sobre
+          o seu pensamento específico — seus argumentos, suas referências,
+          suas posições. A diferença de qualidade entre uma consulta sem contexto
+          e uma consulta contextualizada é radical.
+        </p>
+        <div class="fb-specs">
+          <div class="fb-spec">
+            <div class="fb-spec-key">Capacidade</div>
+            <div class="fb-spec-val">Processa documentos extensos em segundos. Jurisprudência, contratos, relatórios, teses — o volume que levaria dias de leitura é sintetizado sem perda de nuance.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Raciocínio</div>
+            <div class="fb-spec-val">Capaz de identificar contradições internas em argumentos, sugerir contrapontos e mapear pontos cegos em análises — sem o filtro de concordância que caracteriza interlocutores humanos.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Produção</div>
+            <div class="fb-spec-val">Transforma clusters de notas em rascunhos estruturados. Pareceres, artigos, relatórios, capítulos — o pensamento é seu, a velocidade de execução é amplificada.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Privacidade</div>
+            <div class="fb-spec-val">Configurável para uso em ambientes com restrições de confidencialidade. O nível de exposição de dados é definido pelo usuário, não pela plataforma.</div>
+          </div>
+        </div>
+        <div class="fb-quote">
+          <p>"Com contexto pessoal, a inteligência artificial deixa de ser uma ferramenta genérica e torna-se uma extensão do seu raciocínio."</p>
+        </div>
+      </div>
+
+      <div class="ferr-block" data-ferr="2">
+        <div class="fb-layer-tag">
+          <span class="fb-layer-num">Camada III</span>
+          <div class="fb-layer-line"></div>
+          <span class="fb-layer-name">Camada de Integração</span>
+        </div>
+        <h3 class="fb-title">A ponte que elimina<br><em>toda fricção entre camadas</em></h3>
+        <div class="fb-function">Protocolo de comunicação entre sistemas</div>
+        <p class="fb-body">
+          A terceira camada é um protocolo de integração que conecta o repositório
+          diretamente ao motor de inteligência — sem copiar, sem colar, sem interrupções
+          no fluxo de trabalho. O modelo de linguagem passa a ler e escrever
+          no repositório em tempo real, como se fosse um colaborador com acesso
+          direto aos seus arquivos.
+        </p>
+        <p class="pb-body">
+          Esta camada transforma o que seria uma troca manual de informações em
+          um ciclo contínuo e automatizável. Você pergunta; o sistema consulta
+          suas notas, formula a resposta com base no seu contexto específico e,
+          se necessário, cria novos registros diretamente no repositório. O Método C.A
+          opera em velocidade máxima apenas quando as três camadas estão integradas.
+        </p>
+        <div class="fb-specs">
+          <div class="fb-spec">
+            <div class="fb-spec-key">Função</div>
+            <div class="fb-spec-val">Permite que o motor de inteligência leia, busque e escreva no repositório sem intervenção manual. A integração é bidirecional e em tempo real.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Configuração</div>
+            <div class="fb-spec-val">Instalação técnica única, sem manutenção contínua. Após configurado, opera de forma transparente — o usuário interage com o sistema, não com o protocolo.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Automação</div>
+            <div class="fb-spec-val">Permite criar fluxos onde a captura, classificação e conexão de informações ocorrem com mínima intervenção manual — liberando atenção para o trabalho intelectual.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Expansão</div>
+            <div class="fb-spec-val">O mesmo protocolo pode integrar outras fontes — calendários, e-mails, documentos externos — ao repositório central, ampliando o escopo do sistema.</div>
+          </div>
+        </div>
+        <div class="fb-quote">
+          <p>"A fricção entre ferramentas é onde a produtividade morre. A integração é onde ela renasce."</p>
+        </div>
+      </div>
+
+      <div class="ferr-cta">
+        <p class="ferr-cta-label">Próximo passo</p>
+        <p class="ferr-cta-text">A infraestrutura está descrita. Dê o próximo passo e acesse o material completo do <em>Método C.A</em>.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <a class="btn-comece" href="/cadastro/">
+            Comece Agora
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <a class="btn-outline" href="/aplicacoes/">
+            Ver as Aplicações
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro — Método C.A</title>
+<meta name="description" content="Receba o e-book do Método C.A — material completo sobre como construir seu Cérebro Artificial.">
+<link rel="canonical" href="https://ca.franklingmendes.com/cadastro/">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body data-page="cadastro">
+
+<canvas id="graph-canvas" aria-hidden="true"></canvas>
+
+<nav>
+  <a class="nav-logo" href="/">Método <em>C.A</em></a>
+  <ul class="nav-links">
+    <li><a href="/"             id="nav-home">Home</a></li>
+    <li><a href="/conceito/"    id="nav-conceito">Conceito</a></li>
+    <li><a href="/metodo/"      id="nav-metodo">Método</a></li>
+    <li><a href="/ferramentas/" id="nav-ferramentas">Ferramentas</a></li>
+    <li><a href="/aplicacoes/"  id="nav-aplicacoes">Aplicações</a></li>
+  </ul>
+</nav>
+
+<div class="page" id="page-cadastro">
+  <div class="cadastro-wrap">
+
+    <div class="cadastro-left">
+      <p class="cad-eyebrow">Acesso ao Material</p>
+      <h2 class="cad-heading">Receba o e-book<br>do Método <em>C.A</em><br>agora mesmo</h2>
+      <p class="cad-lead">
+        Preencha os dados ao lado e receba imediatamente o material
+        completo sobre como construir seu Cérebro Artificial — com
+        o passo a passo das quatro fases do método.
+      </p>
+
+      <div class="cad-promise">
+        <div class="cad-promise-item">
+          <div class="cad-promise-mark"></div>
+          <p class="cad-promise-text"><strong>Entrega imediata.</strong> O e-book é enviado assim que o cadastro é confirmado, sem espera.</p>
+        </div>
+        <div class="cad-promise-item">
+          <div class="cad-promise-mark"></div>
+          <p class="cad-promise-text"><strong>Material exclusivo.</strong> Conteúdo desenvolvido para profissionais do conhecimento — juristas, empresários, escritores e pesquisadores.</p>
+        </div>
+        <div class="cad-promise-item">
+          <div class="cad-promise-mark"></div>
+          <p class="cad-promise-text"><strong>Sem spam.</strong> Seus dados são usados exclusivamente para o envio do material e comunicações relacionadas ao Método C.A.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cadastro-right">
+      <p class="cad-form-label">05 — Cadastro</p>
+
+      <form class="cad-form" id="cad-form" onsubmit="submitCadastro(event)">
+
+        <div class="cad-field">
+          <label class="cad-label" for="cad-nome">Nome completo</label>
+          <input class="cad-input" id="cad-nome" type="text"
+            placeholder="Seu nome" autocomplete="name" required />
+        </div>
+
+        <div class="cad-field">
+          <label class="cad-label" for="cad-tel">Telefone</label>
+          <input class="cad-input" id="cad-tel" type="tel"
+            placeholder="+55 (00) 00000-0000" autocomplete="tel" required />
+        </div>
+
+        <div class="cad-field">
+          <label class="cad-label" for="cad-email">E-mail</label>
+          <input class="cad-input" id="cad-email" type="email"
+            placeholder="seu@email.com" autocomplete="email" required />
+        </div>
+
+        <div class="cad-field" style="position:relative;">
+          <label class="cad-label" for="cad-ocup">Ocupação</label>
+          <select class="cad-select" id="cad-ocup" required>
+            <option value="" disabled selected>Selecione sua área</option>
+            <option value="Jurista / Advogado">Jurista / Advogado</option>
+            <option value="Empresário / Executivo">Empresário / Executivo</option>
+            <option value="Escritor / Jornalista">Escritor / Jornalista</option>
+            <option value="Pesquisador / Acadêmico">Pesquisador / Acadêmico</option>
+            <option value="Estudante">Estudante</option>
+            <option value="Gestor / Consultor">Gestor / Consultor</option>
+            <option value="Outra">Outra</option>
+          </select>
+          <span class="cad-select-arrow">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+
+        <div class="cad-form-footer">
+
+          <div class="cad-loading" id="cad-loading">
+            <div class="cad-spinner"></div>
+            <span class="cad-loading-text">Registrando seu acesso...</span>
+          </div>
+
+          <div class="cad-feedback" id="cad-success">
+            <div class="cad-feedback-icon success">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8l4 4 6-7" stroke="rgba(80,180,160,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <div class="cad-feedback-title">Acesso confirmado</div>
+              <div class="cad-feedback-body">O e-book do Método C.A foi enviado para o seu e-mail. Verifique também a pasta de spam caso não encontre na caixa de entrada.</div>
+            </div>
+          </div>
+
+          <div class="cad-feedback" id="cad-error">
+            <div class="cad-feedback-icon error">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 4v5M8 11v1" stroke="rgba(220,80,80,0.9)" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <div class="cad-feedback-title">Erro ao registrar</div>
+              <div class="cad-feedback-body" id="cad-error-msg">Ocorreu um problema ao salvar seu cadastro. Tente novamente ou entre em contato.</div>
+            </div>
+          </div>
+
+          <button class="cad-submit" id="cad-btn" type="submit">
+            Comece Agora
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <p class="cad-legal">
+            Ao prosseguir, você concorda com o uso dos seus dados para
+            o envio do material solicitado. Nenhuma informação é
+            compartilhada com terceiros.
+          </p>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script src="/assets/app.js"></script>
+</body>
+</html>

@@ -23,17 +23,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Inject secrets into index.html
+      - name: Inject secrets into assets/app.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           python3 - <<'EOF'
           import os, pathlib
-          html = pathlib.Path("index.html").read_text()
-          html = html.replace("__SUPABASE_URL__", os.environ["SUPABASE_URL"])
-          html = html.replace("__SUPABASE_ANON_KEY__", os.environ["SUPABASE_ANON_KEY"])
-          pathlib.Path("index.html").write_text(html)
+          target = pathlib.Path("assets/app.js")
+          js = target.read_text()
+          js = js.replace("__SUPABASE_URL__", os.environ["SUPABASE_URL"])
+          js = js.replace("__SUPABASE_ANON_KEY__", os.environ["SUPABASE_ANON_KEY"])
+          target.write_text(js)
           EOF
 
       - uses: actions/configure-pages@v4
