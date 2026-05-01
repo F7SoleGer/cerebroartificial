@@ -1,0 +1,3187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Método C.A — Cérebro Artificial</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --gold:       #C89A2E;
+  --gold-light: #E8B84B;
+  --gold-dim:   rgba(200,154,46,0.12);
+  --dark:       #0D0D0D;
+  --dark-2:     #141414;
+  --dark-3:     #1C1C1C;
+  --light:      #F0EBE0;
+  --muted:      #8A8A7A;
+  --muted-2:    #5A5A50;
+  --border:     rgba(255,255,255,0.06);
+}
+
+html, body {
+  width: 100%; height: 100%;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--dark);
+  color: var(--light);
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════
+   GLOBAL GRAPH CANVAS (fixed, all pages)
+═══════════════════════════════════════ */
+#graph-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════
+   ROUTER
+═══════════════════════════════════════ */
+.page {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.page.active { display: block; }
+
+/* ═══════════════════════════════════════
+   NAV
+═══════════════════════════════════════ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 300;
+  padding: 1.25rem 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(13,13,13,0.72);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  color: var(--light);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  user-select: none;
+}
+.nav-logo em { color: var(--gold); font-style: italic; }
+
+.nav-links {
+  display: flex;
+  gap: 2.75rem;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s;
+  user-select: none;
+  position: relative;
+  padding-bottom: 4px;
+}
+.nav-links a:hover { color: var(--light); }
+.nav-links a.active { color: var(--gold); }
+.nav-links a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0; right: 0;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.5;
+}
+
+/* ═══════════════════════════════════════
+   PAGE — HOME
+═══════════════════════════════════════ */
+#page-home {
+  display: none;
+}
+#page-home.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#page-home::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(13,13,13,0.22) 0%, rgba(13,13,13,0.8) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.home-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  user-select: none;
+  animation: fadeUp 1.4s ease both;
+}
+
+.home-eyebrow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1.75rem;
+  opacity: 0.7;
+}
+
+.home-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(3.5rem, 9vw, 7.5rem);
+  font-weight: 900;
+  line-height: 1.0;
+  color: var(--light);
+  letter-spacing: -0.02em;
+}
+.home-title em { color: var(--gold); font-style: italic; }
+
+.home-tagline {
+  margin-top: 1.5rem;
+  font-size: clamp(0.72rem, 1.3vw, 0.9rem);
+  color: var(--muted);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-weight: 300;
+}
+
+.home-enter {
+  margin-top: 4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid rgba(200,154,46,0.2);
+  padding: 13px 30px;
+  border-radius: 2px;
+  transition: all 0.3s;
+  animation: fadeUp 1.8s 0.5s ease both;
+  opacity: 0;
+}
+.home-enter:hover {
+  color: var(--gold);
+  border-color: rgba(200,154,46,0.5);
+  background: rgba(200,154,46,0.04);
+  letter-spacing: 0.2em;
+}
+.home-enter svg { transition: transform 0.3s; flex-shrink: 0; }
+.home-enter:hover svg { transform: translateX(5px); }
+
+.scroll-hint {
+  position: fixed;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  animation: fadeUp 2s 1.2s ease both;
+}
+.scroll-hint span {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.5;
+}
+.scroll-line {
+  width: 1px; height: 36px;
+  background: linear-gradient(to bottom, rgba(200,154,46,0.55), transparent);
+  animation: scrollDrop 2.4s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════
+   PAGE — CONCEITO
+═══════════════════════════════════════ */
+#page-conceito {
+  padding-top: 0;
+}
+
+/* dark overlay so text is legible over graph */
+#page-conceito::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(13,13,13,0.86);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.conceito-wrap {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+/* LEFT COLUMN — sticky header panel */
+.conceito-left {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 7rem 4rem 4rem 5rem;
+  border-right: 1px solid var(--border);
+}
+
+.conceito-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.8;
+  margin-bottom: 2rem;
+}
+
+.conceito-heading {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.4rem, 3.5vw, 3.4rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--light);
+  letter-spacing: -0.01em;
+  margin-bottom: 2rem;
+}
+.conceito-heading em { color: var(--gold); font-style: italic; }
+
+.conceito-lead {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.8;
+  font-weight: 300;
+  max-width: 440px;
+  margin-bottom: 3rem;
+}
+
+/* progress indicator */
+.conceito-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prog-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.3s;
+}
+.prog-item.active { opacity: 1; }
+
+.prog-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--muted-2);
+  flex-shrink: 0;
+  transition: background 0.3s, transform 0.3s;
+}
+.prog-item.active .prog-dot {
+  background: var(--gold);
+  transform: scale(1.4);
+}
+
+.prog-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.3s;
+}
+.prog-item.active .prog-label { color: var(--light); }
+
+/* RIGHT COLUMN — scrollable content */
+.conceito-right {
+  padding: 12rem 5rem 8rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8rem;
+}
+
+/* individual concept blocks */
+.concept-block {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.concept-block.visible {
+  opacity: 1;
+  transform: none;
+}
+
+.cb-number {
+  font-family: 'Playfair Display', serif;
+  font-size: 5rem;
+  font-weight: 900;
+  color: rgba(200,154,46,0.08);
+  line-height: 1;
+  margin-bottom: -1rem;
+  letter-spacing: -0.04em;
+  user-select: none;
+}
+
+.cb-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.6rem, 2.5vw, 2rem);
+  font-weight: 700;
+  color: var(--light);
+  line-height: 1.2;
+  margin-bottom: 1.25rem;
+}
+.cb-title em { color: var(--gold); font-style: italic; }
+
+.cb-body {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.85;
+  font-weight: 300;
+  max-width: 500px;
+  margin-bottom: 2rem;
+}
+
+.cb-divider {
+  width: 40px;
+  height: 1px;
+  background: rgba(200,154,46,0.3);
+  margin-bottom: 2rem;
+}
+
+/* quote pull */
+.cb-quote {
+  border-left: 2px solid rgba(200,154,46,0.35);
+  padding: 0.75rem 0 0.75rem 1.5rem;
+  margin-bottom: 2rem;
+}
+.cb-quote p {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--light);
+  line-height: 1.55;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+/* profile tags */
+.cb-profiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 1.5rem;
+}
+.cb-tag {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid rgba(200,154,46,0.25);
+  padding: 5px 14px;
+  border-radius: 1px;
+  opacity: 0.8;
+}
+
+/* stat row */
+.cb-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  border: 1px solid var(--border);
+  margin-top: 2rem;
+}
+.cb-stat {
+  padding: 1.25rem;
+  background: rgba(255,255,255,0.02);
+}
+.cb-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 0.4rem;
+}
+.cb-stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  font-weight: 300;
+}
+
+/* CTA block at end of conceito */
+.conceito-cta {
+  border-top: 1px solid var(--border);
+  padding-top: 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.conceito-cta.visible { opacity: 1; transform: none; }
+
+.conceito-cta-label {
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.7;
+}
+.conceito-cta-text {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+  font-weight: 700;
+  color: var(--light);
+  line-height: 1.3;
+  max-width: 440px;
+}
+.conceito-cta-text em { color: var(--gold); font-style: italic; }
+
+.btn-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--gold);
+  color: var(--dark);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  border-radius: 2px;
+  cursor: pointer;
+  border: none;
+  transition: background 0.25s, letter-spacing 0.25s;
+  align-self: flex-start;
+}
+.btn-gold:hover { background: var(--gold-light); letter-spacing: 0.18em; }
+.btn-gold svg { transition: transform 0.25s; flex-shrink: 0; }
+.btn-gold:hover svg { transform: translateX(4px); }
+
+/* ═══════════════════════════════════════
+   PLACEHOLDER PAGES
+═══════════════════════════════════════ */
+.placeholder-page {
+  display: none;
+}
+.placeholder-page.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.placeholder-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(13,13,13,0.88);
+  z-index: 1;
+  pointer-events: none;
+}
+.placeholder-inner {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+.placeholder-inner h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--light);
+  margin-bottom: 1rem;
+  font-weight: 700;
+  opacity: 0.2;
+}
+.placeholder-inner p {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.2;
+}
+
+/* ═══════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes scrollDrop {
+  0%   { transform: scaleY(0); transform-origin: top; }
+  50%  { transform: scaleY(1); transform-origin: top; }
+  51%  { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; opacity: 0; }
+}
+
+/* ═══════════════════════════════════════
+   PAGE — MÉTODO
+═══════════════════════════════════════ */
+#page-metodo::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(13,13,13,0.88);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.metodo-wrap {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.metodo-left {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 7rem 4rem 4rem 5rem;
+  border-right: 1px solid var(--border);
+}
+
+.metodo-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.8;
+  margin-bottom: 2rem;
+}
+
+.metodo-heading {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 3.2vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--light);
+  letter-spacing: -0.01em;
+  margin-bottom: 2rem;
+}
+.metodo-heading em { color: var(--gold); font-style: italic; }
+
+.metodo-lead {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.8;
+  font-weight: 300;
+  max-width: 420px;
+  margin-bottom: 3rem;
+}
+
+.metodo-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.metodo-timeline::before {
+  content: '';
+  position: absolute;
+  left: 9px; top: 8px; bottom: 8px;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(200,154,46,0.4), rgba(200,154,46,0.05));
+}
+
+.mt-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 0;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 0.3s;
+  position: relative;
+}
+.mt-item.active { opacity: 1; }
+
+.mt-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--muted-2);
+  background: var(--dark);
+  flex-shrink: 0;
+  transition: border-color 0.3s, background 0.3s;
+  position: relative; z-index: 1;
+}
+.mt-item.active .mt-dot { border-color: var(--gold); background: var(--gold); }
+
+.mt-label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.3s;
+}
+.mt-item.active .mt-label { color: var(--light); }
+
+.mt-phase {
+  font-family: 'Playfair Display', serif;
+  font-size: 11px;
+  color: var(--gold);
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.3s;
+  white-space: nowrap;
+}
+.mt-item.active .mt-phase { opacity: 0.7; }
+
+.metodo-right {
+  padding: 10rem 5rem 8rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.phase-block {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  padding-bottom: 7rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 7rem;
+}
+.phase-block:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 2rem; }
+.phase-block.visible { opacity: 1; transform: none; }
+
+.pb-phase-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2rem;
+}
+.pb-phase-num {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--gold); opacity: 0.7;
+}
+.pb-phase-line { width: 32px; height: 1px; background: rgba(200,154,46,0.3); }
+.pb-phase-name {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pb-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.6rem, 2.4vw, 2rem);
+  font-weight: 700;
+  color: var(--light);
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+.pb-title em { color: var(--gold); font-style: italic; }
+
+.pb-body {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.85;
+  font-weight: 300;
+  max-width: 500px;
+  margin-bottom: 1.5rem;
+}
+
+.pb-quote {
+  border-left: 2px solid rgba(200,154,46,0.3);
+  padding: 0.75rem 0 0.75rem 1.5rem;
+  margin: 1.75rem 0;
+}
+.pb-quote p {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem; font-style: italic;
+  color: var(--light); line-height: 1.55;
+  font-weight: 700; opacity: 0.7;
+}
+
+.pb-practices {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 2rem;
+  border: 1px solid var(--border);
+}
+
+.pb-practice {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  background: rgba(255,255,255,0.02);
+  transition: background 0.2s;
+}
+.pb-practice:hover { background: rgba(255,255,255,0.04); }
+
+.pb-practice-idx {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1.1rem 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.75rem;
+  color: rgba(200,154,46,0.4);
+  font-weight: 700;
+  border-right: 1px solid var(--border);
+}
+
+.pb-practice-content { padding: 1.1rem 1.25rem; }
+
+.pb-practice-title {
+  font-size: 13px; font-weight: 500;
+  color: var(--light);
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.02em;
+}
+
+.pb-practice-desc {
+  font-size: 12px; color: var(--muted);
+  line-height: 1.6; font-weight: 300;
+}
+
+.pb-principles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  border: 1px solid var(--border);
+  margin-top: 2rem;
+}
+
+.pb-principle { padding: 1.5rem; background: rgba(255,255,255,0.02); }
+
+.pb-principle-label {
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold); opacity: 0.7;
+  margin-bottom: 0.6rem;
+}
+
+.pb-principle-text {
+  font-size: 13px; color: var(--muted);
+  line-height: 1.65; font-weight: 300;
+}
+
+.metodo-cta {
+  border-top: 1px solid var(--border);
+  padding-top: 4rem; padding-bottom: 6rem;
+  display: flex; flex-direction: column; gap: 1.5rem;
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.metodo-cta.visible { opacity: 1; transform: none; }
+
+.metodo-cta-label {
+  font-size: 10px; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--gold); opacity: 0.7;
+}
+.metodo-cta-text {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+  font-weight: 700; color: var(--light);
+  line-height: 1.3; max-width: 460px;
+}
+.metodo-cta-text em { color: var(--gold); font-style: italic; }
+
+@media (max-width: 860px) {
+  .conceito-wrap { grid-template-columns: 1fr; }
+  .conceito-left { position: relative; height: auto; padding: 8rem 2rem 3rem; border-right: none; border-bottom: 1px solid var(--border); }
+  .conceito-progress { display: none; }
+  .conceito-right { padding: 3rem 2rem 6rem; }
+  .cb-stats { grid-template-columns: 1fr 1fr; }
+  .metodo-wrap { grid-template-columns: 1fr; }
+  .metodo-left { position: relative; height: auto; padding: 8rem 2rem 3rem; border-right: none; border-bottom: 1px solid var(--border); }
+  .metodo-timeline { display: none; }
+  .metodo-right { padding: 3rem 2rem 6rem; }
+  .pb-principles { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════
+   PAGE — FERRAMENTAS
+═══════════════════════════════════════ */
+#page-ferramentas::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(13,13,13,0.88);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.ferr-wrap {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.ferr-left {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 7rem 4rem 4rem 5rem;
+  border-right: 1px solid var(--border);
+}
+
+.ferr-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.8;
+  margin-bottom: 2rem;
+}
+
+.ferr-heading {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 3.2vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--light);
+  letter-spacing: -0.01em;
+  margin-bottom: 2rem;
+}
+.ferr-heading em { color: var(--gold); font-style: italic; }
+
+.ferr-lead {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.8;
+  font-weight: 300;
+  max-width: 420px;
+  margin-bottom: 3rem;
+}
+
+.ferr-index {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+.ferr-index::before {
+  content: '';
+  position: absolute;
+  left: 9px; top: 8px; bottom: 8px;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(200,154,46,0.4), rgba(200,154,46,0.05));
+}
+.fi-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 0;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 0.3s;
+  position: relative;
+}
+.fi-item.active { opacity: 1; }
+.fi-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--muted-2);
+  background: var(--dark);
+  flex-shrink: 0;
+  transition: border-color 0.3s, background 0.3s;
+  position: relative; z-index: 1;
+}
+.fi-item.active .fi-dot { border-color: var(--gold); background: var(--gold); }
+.fi-label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.3s;
+  line-height: 1.4;
+}
+.fi-item.active .fi-label { color: var(--light); }
+
+.ferr-right {
+  padding: 10rem 5rem 8rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ferr-block {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  padding-bottom: 6rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6rem;
+}
+.ferr-block:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 2rem; }
+.ferr-block.visible { opacity: 1; transform: none; }
+
+.fb-layer-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.75rem;
+}
+.fb-layer-num {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--gold); opacity: 0.7;
+}
+.fb-layer-line { width: 32px; height: 1px; background: rgba(200,154,46,0.3); }
+.fb-layer-name {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+.fb-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.5rem, 2.3vw, 1.9rem);
+  font-weight: 700;
+  color: var(--light);
+  line-height: 1.25;
+  margin-bottom: 1.25rem;
+}
+.fb-title em { color: var(--gold); font-style: italic; }
+
+.fb-function {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dark);
+  background: var(--gold);
+  padding: 4px 12px;
+  margin-bottom: 1.25rem;
+  opacity: 0.85;
+}
+
+.fb-body {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.85;
+  font-weight: 300;
+  max-width: 500px;
+  margin-bottom: 1.5rem;
+}
+
+.fb-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--border);
+  margin-top: 2rem;
+}
+.fb-spec {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 0;
+  background: rgba(255,255,255,0.02);
+  transition: background 0.2s;
+}
+.fb-spec:hover { background: rgba(255,255,255,0.04); }
+.fb-spec-key {
+  padding: 1rem 1rem 1rem 1.25rem;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-right: 1px solid var(--border);
+  line-height: 1.5;
+  opacity: 0.8;
+}
+.fb-spec-val {
+  padding: 1rem 1.25rem;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+.fb-quote {
+  border-left: 2px solid rgba(200,154,46,0.3);
+  padding: 0.75rem 0 0.75rem 1.5rem;
+  margin: 2rem 0 0;
+}
+.fb-quote p {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem; font-style: italic;
+  color: var(--light); line-height: 1.55;
+  font-weight: 700; opacity: 0.7;
+}
+
+.ferr-cta {
+  border-top: 1px solid var(--border);
+  padding-top: 4rem; padding-bottom: 6rem;
+  display: flex; flex-direction: column; gap: 1.5rem;
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.ferr-cta.visible { opacity: 1; transform: none; }
+.ferr-cta-label {
+  font-size: 10px; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--gold); opacity: 0.7;
+}
+.ferr-cta-text {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+  font-weight: 700; color: var(--light);
+  line-height: 1.3; max-width: 460px;
+}
+.ferr-cta-text em { color: var(--gold); font-style: italic; }
+
+/* ═══════════════════════════════════════
+   PAGE — APLICAÇÕES
+═══════════════════════════════════════ */
+#page-aplicacoes::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(13,13,13,0.88);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.aplic-wrap {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.aplic-left {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 7rem 4rem 4rem 5rem;
+  border-right: 1px solid var(--border);
+}
+
+.aplic-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.8;
+  margin-bottom: 2rem;
+}
+
+.aplic-heading {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 3.2vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--light);
+  letter-spacing: -0.01em;
+  margin-bottom: 2rem;
+}
+.aplic-heading em { color: var(--gold); font-style: italic; }
+
+.aplic-lead {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.8;
+  font-weight: 300;
+  max-width: 420px;
+  margin-bottom: 3rem;
+}
+
+.aplic-index {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+.aplic-index::before {
+  content: '';
+  position: absolute;
+  left: 9px; top: 8px; bottom: 8px;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(200,154,46,0.4), rgba(200,154,46,0.05));
+}
+.ai-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 0;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 0.3s;
+  position: relative;
+}
+.ai-item.active { opacity: 1; }
+.ai-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--muted-2);
+  background: var(--dark);
+  flex-shrink: 0;
+  transition: border-color 0.3s, background 0.3s;
+  position: relative; z-index: 1;
+}
+.ai-item.active .ai-dot { border-color: var(--gold); background: var(--gold); }
+.ai-label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.3s;
+  line-height: 1.4;
+}
+.ai-item.active .ai-label { color: var(--light); }
+
+.aplic-right {
+  padding: 10rem 5rem 8rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.aplic-block {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  padding-bottom: 6rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6rem;
+}
+.aplic-block:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 2rem; }
+.aplic-block.visible { opacity: 1; transform: none; }
+
+.ab-profile-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.75rem;
+}
+.ab-profile-num {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--gold); opacity: 0.7;
+}
+.ab-profile-line { width: 32px; height: 1px; background: rgba(200,154,46,0.3); }
+.ab-profile-name {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ab-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.5rem, 2.3vw, 1.9rem);
+  font-weight: 700;
+  color: var(--light);
+  line-height: 1.25;
+  margin-bottom: 1.25rem;
+}
+.ab-title em { color: var(--gold); font-style: italic; }
+
+.ab-body {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.85;
+  font-weight: 300;
+  max-width: 500px;
+  margin-bottom: 1.5rem;
+}
+
+.ab-scenarios {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--border);
+  margin-top: 2rem;
+}
+.ab-scenario {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  background: rgba(255,255,255,0.02);
+  transition: background 0.2s;
+}
+.ab-scenario:hover { background: rgba(255,255,255,0.04); }
+.ab-scenario-idx {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1.1rem 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.75rem;
+  color: rgba(200,154,46,0.4);
+  font-weight: 700;
+  border-right: 1px solid var(--border);
+}
+.ab-scenario-content { padding: 1.1rem 1.25rem; }
+.ab-scenario-title {
+  font-size: 13px; font-weight: 500;
+  color: var(--light);
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.02em;
+}
+.ab-scenario-desc {
+  font-size: 12px; color: var(--muted);
+  line-height: 1.6; font-weight: 300;
+}
+
+.ab-quote {
+  border-left: 2px solid rgba(200,154,46,0.3);
+  padding: 0.75rem 0 0.75rem 1.5rem;
+  margin: 2rem 0 0;
+}
+.ab-quote p {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem; font-style: italic;
+  color: var(--light); line-height: 1.55;
+  font-weight: 700; opacity: 0.7;
+}
+
+/* closing CTA — Aplicações */
+.aplic-cta-final {
+  border-top: 1px solid var(--border);
+  padding-top: 5rem; padding-bottom: 7rem;
+  display: flex; flex-direction: column; gap: 2rem;
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.aplic-cta-final.visible { opacity: 1; transform: none; }
+
+.aplic-cta-eyebrow {
+  font-size: 10px; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--gold); opacity: 0.7;
+}
+.aplic-cta-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+  font-weight: 900; color: var(--light);
+  line-height: 1.2; max-width: 460px;
+}
+.aplic-cta-headline em { color: var(--gold); font-style: italic; }
+.aplic-cta-body {
+  font-size: 15px; color: var(--muted);
+  line-height: 1.8; font-weight: 300; max-width: 440px;
+}
+.aplic-cta-buttons {
+  display: flex; gap: 12px; flex-wrap: wrap;
+}
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: transparent;
+  color: var(--light);
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 13px 28px; border-radius: 2px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.15);
+  transition: border-color 0.25s, color 0.25s;
+}
+.btn-outline:hover { border-color: rgba(200,154,46,0.4); color: var(--gold); }
+
+@media (max-width: 860px) {
+  .ferr-wrap { grid-template-columns: 1fr; }
+  .ferr-left { position: relative; height: auto; padding: 8rem 2rem 3rem; border-right: none; border-bottom: 1px solid var(--border); }
+  .ferr-index { display: none; }
+  .ferr-right { padding: 3rem 2rem 6rem; }
+  .fb-spec { grid-template-columns: 100px 1fr; }
+  .aplic-wrap { grid-template-columns: 1fr; }
+  .aplic-left { position: relative; height: auto; padding: 8rem 2rem 3rem; border-right: none; border-bottom: 1px solid var(--border); }
+  .aplic-index { display: none; }
+  .aplic-right { padding: 3rem 2rem 6rem; }
+}
+
+
+/* ═══════════════════════════════════════
+   PAGE — CADASTRO
+═══════════════════════════════════════ */
+#page-cadastro::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(13,13,13,0.92);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.cadastro-wrap {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+/* LEFT — editorial pitch */
+.cadastro-left {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 7rem 4rem 4rem 5rem;
+  border-right: 1px solid var(--border);
+}
+
+.cad-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.8;
+  margin-bottom: 2rem;
+}
+
+.cad-heading {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 3.2vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--light);
+  letter-spacing: -0.01em;
+  margin-bottom: 1.75rem;
+}
+.cad-heading em { color: var(--gold); font-style: italic; }
+
+.cad-lead {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.8;
+  font-weight: 300;
+  max-width: 400px;
+  margin-bottom: 2.5rem;
+}
+
+.cad-promise {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--border);
+}
+
+.cad-promise-item {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 0;
+  background: rgba(255,255,255,0.02);
+  padding: 1rem 1.25rem 1rem 0;
+}
+
+.cad-promise-mark {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 2px;
+}
+
+.cad-promise-mark::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+.cad-promise-text {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+.cad-promise-text strong {
+  color: var(--light);
+  font-weight: 500;
+}
+
+/* RIGHT — form */
+.cadastro-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 7rem 5rem 4rem 4rem;
+  overflow-y: auto;
+}
+
+.cad-form-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.7;
+  margin-bottom: 2.5rem;
+}
+
+.cad-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 440px;
+}
+
+.cad-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+  transition: border-color 0.3s;
+  position: relative;
+}
+.cad-field:first-of-type { border-top: 1px solid var(--border); }
+
+.cad-field:focus-within {
+  border-color: rgba(200,154,46,0.4);
+}
+
+.cad-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.6;
+  padding: 1.1rem 0 0;
+  transition: opacity 0.2s;
+}
+.cad-field:focus-within .cad-label { opacity: 1; }
+
+.cad-input,
+.cad-select {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--light);
+  padding: 0.5rem 0 1.1rem;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.cad-input::placeholder { color: var(--muted-2); font-weight: 300; }
+
+.cad-select option {
+  background: #1A1A1A;
+  color: var(--light);
+}
+
+.cad-select-arrow {
+  position: absolute;
+  right: 0;
+  bottom: 1.3rem;
+  pointer-events: none;
+  color: var(--muted);
+}
+
+/* form footer */
+.cad-form-footer {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.cad-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--gold);
+  color: var(--dark);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 16px 40px;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.25s, letter-spacing 0.25s, opacity 0.25s;
+  align-self: flex-start;
+}
+.cad-submit:hover:not(:disabled) { background: var(--gold-light); letter-spacing: 0.22em; }
+.cad-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.cad-submit svg { transition: transform 0.25s; flex-shrink: 0; }
+.cad-submit:hover:not(:disabled) svg { transform: translateX(4px); }
+
+.cad-legal {
+  font-size: 11px;
+  color: var(--muted-2);
+  line-height: 1.6;
+  font-weight: 300;
+  max-width: 380px;
+}
+
+/* feedback states */
+.cad-feedback {
+  display: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+  max-width: 440px;
+  animation: fadeUp 0.6s ease both;
+}
+.cad-feedback.visible { display: flex; }
+
+.cad-feedback-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cad-feedback-icon.success { background: rgba(80,180,160,0.12); }
+.cad-feedback-icon.error   { background: rgba(220,80,80,0.12); }
+
+.cad-feedback-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--light);
+  margin-bottom: 0.25rem;
+}
+.cad-feedback-body {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+.cad-loading {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem 0;
+}
+.cad-loading.visible { display: flex; }
+.cad-spinner {
+  width: 18px; height: 18px;
+  border: 1.5px solid rgba(200,154,46,0.2);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.cad-loading-text {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* btn-comece — the main CTA used across pages */
+.btn-comece {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--gold);
+  color: var(--dark);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 14px 30px;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.25s, letter-spacing 0.25s;
+}
+.btn-comece:hover { background: var(--gold-light); letter-spacing: 0.2em; }
+.btn-comece svg { transition: transform 0.25s; flex-shrink: 0; }
+.btn-comece:hover svg { transform: translateX(4px); }
+
+@media (max-width: 860px) {
+  .cadastro-wrap { grid-template-columns: 1fr; }
+  .cadastro-left { position: relative; height: auto; padding: 8rem 2rem 3rem; border-right: none; border-bottom: 1px solid var(--border); }
+  .cadastro-right { padding: 3rem 2rem 6rem; justify-content: flex-start; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- GLOBAL GRAPH CANVAS -->
+<canvas id="graph-canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="goTo('home')">Método <em>C.A</em></div>
+  <ul class="nav-links">
+    <li><a onclick="goTo('home')"        id="nav-home"        class="active">Home</a></li>
+    <li><a onclick="goTo('conceito')"    id="nav-conceito">Conceito</a></li>
+    <li><a onclick="goTo('metodo')"      id="nav-metodo">Método</a></li>
+    <li><a onclick="goTo('ferramentas')" id="nav-ferramentas">Ferramentas</a></li>
+    <li><a onclick="goTo('aplicacoes')"  id="nav-aplicacoes">Aplicações</a></li>
+  </ul>
+</nav>
+
+<!-- ══════════════════════════════════════
+     HOME
+══════════════════════════════════════ -->
+<div class="page" id="page-home">
+  <div class="home-content">
+    <p class="home-eyebrow">Conhecimento · Inteligência · Produção</p>
+    <h1 class="home-title">Método <em>C.A</em></h1>
+    <p class="home-tagline">Cérebro Artificial</p>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:4rem;animation:fadeUp 1.8s 0.5s ease both;opacity:0;">
+      <button class="btn-comece" onclick="goTo('cadastro')">
+        Comece Agora
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="home-enter" style="margin-top:0;" onclick="goTo('conceito')">
+        Descubra o Método
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>Explorar</span>
+    <div class="scroll-line"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     CONCEITO
+══════════════════════════════════════ -->
+<div class="page" id="page-conceito">
+  <div class="conceito-wrap">
+
+    <!-- LEFT — sticky -->
+    <div class="conceito-left">
+      <p class="conceito-section-label">01 — Conceito</p>
+      <h2 class="conceito-heading">O que é um<br><em>Cérebro</em><br>Artificial?</h2>
+      <p class="conceito-lead">
+        Uma extensão cognitiva construída para capturar, organizar e 
+        amplificar tudo que você sabe — sem depender da memória biológica.
+      </p>
+
+      <nav class="conceito-progress" aria-label="Seções">
+        <div class="prog-item active" onclick="scrollToBlock(0)">
+          <div class="prog-dot"></div>
+          <span class="prog-label">O Problema</span>
+        </div>
+        <div class="prog-item" onclick="scrollToBlock(1)">
+          <div class="prog-dot"></div>
+          <span class="prog-label">A Definição</span>
+        </div>
+        <div class="prog-item" onclick="scrollToBlock(2)">
+          <div class="prog-dot"></div>
+          <span class="prog-label">Os Princípios</span>
+        </div>
+        <div class="prog-item" onclick="scrollToBlock(3)">
+          <div class="prog-dot"></div>
+          <span class="prog-label">Para Quem</span>
+        </div>
+        <div class="prog-item" onclick="scrollToBlock(4)">
+          <div class="prog-dot"></div>
+          <span class="prog-label">O Diferencial</span>
+        </div>
+      </nav>
+    </div>
+
+    <!-- RIGHT — scrollable -->
+    <div class="conceito-right" id="conceito-scroll">
+
+      <!-- BLOCK 1 -->
+      <div class="concept-block" data-block="0">
+        <div class="cb-number">01</div>
+        <h3 class="cb-title">O problema que nenhuma<br>agenda resolve</h3>
+        <div class="cb-divider"></div>
+        <p class="cb-body">
+          O trabalhador do conhecimento moderno consome centenas de páginas por mês — 
+          processos jurídicos, relatórios de negócios, literatura técnica, doutrina, 
+          pesquisas acadêmicas. A maior parte desaparece em dias. Não por falta de 
+          esforço, mas porque o cérebro humano não foi projetado para armazenar 
+          informação estruturada em larga escala.
+        </p>
+        <p class="cb-body">
+          O que não é registrado, conectado e revisitado torna-se ruído. Reuniões 
+          ocorrem sem contexto. Decisões se repetem sem aprendizado acumulado. 
+          O profissional mais competente fica refém de sua própria memória de curto prazo.
+        </p>
+        <div class="cb-quote">
+          <p>"A mente existe para ter ideias — não para as armazenar."</p>
+        </div>
+        <div class="cb-stats">
+          <div class="cb-stat">
+            <div class="cb-stat-num">90%</div>
+            <div class="cb-stat-label">do que lemos é esquecido em 72 horas</div>
+          </div>
+          <div class="cb-stat">
+            <div class="cb-stat-num">2.5h</div>
+            <div class="cb-stat-label">perdidas por dia procurando informação</div>
+          </div>
+          <div class="cb-stat">
+            <div class="cb-stat-num">40%</div>
+            <div class="cb-stat-label">das decisões sem contexto histórico</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BLOCK 2 -->
+      <div class="concept-block" data-block="1">
+        <div class="cb-number">02</div>
+        <h3 class="cb-title">Um sistema vivo de<br><em>conhecimento pessoal</em></h3>
+        <div class="cb-divider"></div>
+        <p class="cb-body">
+          Um Cérebro Artificial — ou segundo cérebro — é um sistema externo, digital 
+          e pessoal que funciona como extensão cognitiva de quem o constrói. Não é 
+          uma pasta de arquivos. Não é um bloco de notas. É uma estrutura viva onde 
+          cada ideia se conecta a outra, onde o conhecimento se acumula e se torna 
+          produtivo com o tempo.
+        </p>
+        <p class="cb-body">
+          Diferente de ferramentas de produtividade convencionais, o Método C.A 
+          integra captura de conhecimento, organização semântica e amplificação 
+          por inteligência artificial — formando um ciclo contínuo entre o que você 
+          aprende e o que você produz.
+        </p>
+        <div class="cb-quote">
+          <p>"Não basta ler. É preciso construir uma arquitetura do que se sabe."</p>
+        </div>
+      </div>
+
+      <!-- BLOCK 3 -->
+      <div class="concept-block" data-block="2">
+        <div class="cb-number">03</div>
+        <h3 class="cb-title">Os três princípios<br>que sustentam o método</h3>
+        <div class="cb-divider"></div>
+        <p class="cb-body">
+          <strong style="color:var(--light); font-weight:500;">Capturar.</strong> Toda informação relevante é registrada no momento em que surge — 
+          sem fricção, sem adiamento. Uma ideia não capturada é uma ideia perdida.
+        </p>
+        <p class="cb-body">
+          <strong style="color:var(--light); font-weight:500;">Conectar.</strong> O valor não está nos dados isolados, mas nas relações entre eles. 
+          Conceitos jurídicos dialogam com casos práticos. Estratégias empresariais 
+          se vinculam a referências históricas. O conhecimento torna-se uma rede, 
+          não uma lista.
+        </p>
+        <p class="cb-body">
+          <strong style="color:var(--light); font-weight:500;">Amplificar.</strong> A inteligência artificial atua sobre esse repositório pessoal 
+          como um interlocutor treinado no seu próprio pensamento — aprofundando 
+          análises, gerando sínteses e acelerando a produção intelectual sem substituir 
+          o raciocínio humano.
+        </p>
+      </div>
+
+      <!-- BLOCK 4 -->
+      <div class="concept-block" data-block="3">
+        <div class="cb-number">04</div>
+        <h3 class="cb-title">Para quem este<br><em>método foi desenhado</em></h3>
+        <div class="cb-divider"></div>
+        <p class="cb-body">
+          O Método C.A foi concebido para profissionais cujo principal ativo é o 
+          conhecimento — e cuja produção depende diretamente da capacidade de 
+          organizar, recuperar e articular o que sabem.
+        </p>
+        <p class="cb-body">
+          Juristas que precisam cruzar doutrina, jurisprudência e argumentação em 
+          tempo real. Empresários que tomam decisões estratégicas em contextos de 
+          alta complexidade e incerteza. Escritores e pesquisadores que constroem 
+          obras a partir de anos de leitura e investigação. Estudantes que precisam 
+          converter volume de conteúdo em domínio real de conhecimento.
+        </p>
+        <div class="cb-profiles">
+          <span class="cb-tag">Juristas</span>
+          <span class="cb-tag">Empresários</span>
+          <span class="cb-tag">Escritores</span>
+          <span class="cb-tag">Pesquisadores</span>
+          <span class="cb-tag">Estudantes</span>
+          <span class="cb-tag">Gestores</span>
+        </div>
+      </div>
+
+      <!-- BLOCK 5 -->
+      <div class="concept-block" data-block="4">
+        <div class="cb-number">05</div>
+        <h3 class="cb-title">O que distingue o Método C.A<br>de qualquer outra abordagem</h3>
+        <div class="cb-divider"></div>
+        <p class="cb-body">
+          A maioria dos sistemas de organização pessoal trata o conhecimento como 
+          arquivo — algo que se guarda e eventualmente se recupera. O Método C.A 
+          trata o conhecimento como capital — algo que se investe, se conecta e 
+          gera retorno composto com o tempo.
+        </p>
+        <p class="cb-body">
+          Quanto mais você usa o sistema, mais ele entende o seu pensamento. 
+          Quanto mais você registra, mais conexões emergem. Quanto mais conexões 
+          emergem, mais a inteligência artificial consegue operar com precisão 
+          sobre o seu contexto específico — e não sobre generalidades.
+        </p>
+        <div class="cb-quote">
+          <p>"Conhecimento composto: cada ideia registrada aumenta o valor de todas as outras."</p>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="conceito-cta">
+        <p class="conceito-cta-label">Próximo passo</p>
+        <p class="conceito-cta-text">Conheça o <em>Método</em> — como estruturar seu Cérebro Artificial do zero ao avançado.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn-gold" onclick="goTo('metodo')">
+            Ver o Método
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="btn-comece" onclick="goTo('cadastro')">
+            Comece Agora
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /conceito-right -->
+  </div><!-- /conceito-wrap -->
+</div>
+
+<!-- ══════════════════════════════════════
+     MÉTODO
+══════════════════════════════════════ -->
+<div class="page" id="page-metodo">
+  <div class="metodo-wrap">
+
+    <!-- LEFT sticky -->
+    <div class="metodo-left">
+      <p class="metodo-section-label">02 — Método</p>
+      <h2 class="metodo-heading">Como se <em>constrói</em><br>um Cérebro<br>Artificial</h2>
+      <p class="metodo-lead">
+        Quatro fases progressivas. Cada uma transforma a relação entre
+        o que você aprende e o que você é capaz de produzir.
+      </p>
+      <div class="metodo-timeline">
+        <div class="mt-item active" onclick="scrollToPhase(0)">
+          <div class="mt-dot"></div>
+          <span class="mt-label">Estrutura</span>
+          <span class="mt-phase">Fase I</span>
+        </div>
+        <div class="mt-item" onclick="scrollToPhase(1)">
+          <div class="mt-dot"></div>
+          <span class="mt-label">Captura</span>
+          <span class="mt-phase">Fase II</span>
+        </div>
+        <div class="mt-item" onclick="scrollToPhase(2)">
+          <div class="mt-dot"></div>
+          <span class="mt-label">Conexão</span>
+          <span class="mt-phase">Fase III</span>
+        </div>
+        <div class="mt-item" onclick="scrollToPhase(3)">
+          <div class="mt-dot"></div>
+          <span class="mt-label">Amplificação</span>
+          <span class="mt-phase">Fase IV</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT scrollable -->
+    <div class="metodo-right" id="metodo-scroll">
+
+      <!-- FASE I -->
+      <div class="phase-block" data-phase="0">
+        <div class="pb-phase-tag">
+          <span class="pb-phase-num">Fase I</span>
+          <div class="pb-phase-line"></div>
+          <span class="pb-phase-name">Estrutura</span>
+        </div>
+        <h3 class="pb-title">Antes de capturar, é preciso<br><em>construir o território</em></h3>
+        <p class="pb-body">
+          A maioria das pessoas começa acumulando informação sem ter um sistema de
+          destino. O resultado é o mesmo caos digital que tentavam combater — pastas
+          sem critério, arquivos sem contexto, notas sem conexão.
+        </p>
+        <p class="pb-body">
+          A primeira fase do Método C.A é deliberadamente lenta. Você define
+          as grandes áreas do seu conhecimento, estabelece uma taxonomia pessoal e
+          cria uma arquitetura que vai durar anos. Esta decisão, feita uma vez com
+          cuidado, elimina milhares de micro-decisões futuras.
+        </p>
+        <div class="pb-quote">
+          <p>"A organização não é um fim em si mesma. É a fundação sobre a qual o pensamento se torna produtivo."</p>
+        </div>
+        <div class="pb-practices">
+          <div class="pb-practice">
+            <div class="pb-practice-idx">I</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Defina suas áreas de conhecimento</div>
+              <div class="pb-practice-desc">Identifique as três a cinco grandes domínios que estruturam sua vida profissional e intelectual. Jurisprudência, estratégia corporativa, teoria literária — o que for central para você.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">II</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Crie um sistema de entrada neutro</div>
+              <div class="pb-practice-desc">Todo conteúdo entra primeiro em um ponto único de captura, sem classificação imediata. A triagem vem depois — nunca interrompa o fluxo de captura com decisões de organização.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">III</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Estabeleça um vocabulário próprio</div>
+              <div class="pb-practice-desc">Defina os termos, categorias e marcadores que você usará de forma consistente. Um sistema pessoal de classificação que reflita como você realmente pensa — não como os outros organizam.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE II -->
+      <div class="phase-block" data-phase="1">
+        <div class="pb-phase-tag">
+          <span class="pb-phase-num">Fase II</span>
+          <div class="pb-phase-line"></div>
+          <span class="pb-phase-name">Captura</span>
+        </div>
+        <h3 class="pb-title">Registrar sem esforço,<br><em>sem interrupção</em></h3>
+        <p class="pb-body">
+          A captura eficaz não é sobre disciplina. É sobre fricção zero. Quando o
+          ato de registrar exige mais esforço do que o valor percebido da informação,
+          o hábito não se sustenta. A segunda fase do método elimina esta fricção.
+        </p>
+        <p class="pb-body">
+          Trechos de leitura, argumentos que chamam atenção, dados de mercado,
+          observações de reuniões, reflexões pessoais — tudo capturado no momento
+          em que surge, com contexto mínimo suficiente para ser compreendido no futuro.
+        </p>
+        <div class="pb-principles">
+          <div class="pb-principle">
+            <div class="pb-principle-label">Critério de captura</div>
+            <div class="pb-principle-text">Capture o que surpreende, contradiz ou confirma algo que você já sabe. O critério não é "importante" — é "relevante para o seu pensamento".</div>
+          </div>
+          <div class="pb-principle">
+            <div class="pb-principle-label">Contexto mínimo</div>
+            <div class="pb-principle-text">Toda captura recebe fonte, data e uma frase de contexto. Sem isso, o registro torna-se ininteligível em seis meses.</div>
+          </div>
+          <div class="pb-principle">
+            <div class="pb-principle-label">Processamento diferido</div>
+            <div class="pb-principle-text">Capturar e classificar são atos distintos. O processamento ocorre em sessões dedicadas — nunca no meio do fluxo de leitura ou trabalho.</div>
+          </div>
+          <div class="pb-principle">
+            <div class="pb-principle-label">Volume sem culpa</div>
+            <div class="pb-principle-text">Capture mais do que acha necessário. O filtro vem depois. A captura excessiva custa pouco; a captura insuficiente é irreversível.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE III -->
+      <div class="phase-block" data-phase="2">
+        <div class="pb-phase-tag">
+          <span class="pb-phase-num">Fase III</span>
+          <div class="pb-phase-line"></div>
+          <span class="pb-phase-name">Conexão</span>
+        </div>
+        <h3 class="pb-title">O valor emerge nas<br><em>relações entre ideias</em></h3>
+        <p class="pb-body">
+          Uma nota isolada é um fato. Duas notas conectadas são uma observação.
+          Dez notas interligadas são uma teoria. O trabalho intelectual de alto nível
+          não ocorre na captura — ocorre na criação de vínculos entre o que foi capturado.
+        </p>
+        <p class="pb-body">
+          Nesta fase, você revisa o que foi capturado e constrói deliberadamente
+          as pontes entre ideias de domínios diferentes. Um princípio de economia
+          comportamental que ilumina uma tese jurídica. Uma narrativa histórica que
+          estrutura uma estratégia empresarial. O conhecimento transversal é o que
+          separa os especialistas dos pensadores.
+        </p>
+        <div class="pb-quote">
+          <p>"Criatividade é conectar coisas. As mentes mais férteis são as que transitam entre domínios."</p>
+        </div>
+        <div class="pb-practices">
+          <div class="pb-practice">
+            <div class="pb-practice-idx">I</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Sessões de revisão semanal</div>
+              <div class="pb-practice-desc">Reserve tempo semanal para revisar capturas recentes, classificá-las e criar as primeiras conexões explícitas com o que já existe no sistema.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">II</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Links bidirecionais intencionais</div>
+              <div class="pb-practice-desc">Ao criar uma conexão, anote por que as duas ideias se relacionam. O link sem explicação é decorativo. O link com raciocínio é generativo.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">III</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Notas de síntese periódicas</div>
+              <div class="pb-practice-desc">A cada mês, produza sínteses que integrem múltiplas notas sobre um tema. Este exercício força a articulação do que foi aprendido e revela lacunas de compreensão.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE IV -->
+      <div class="phase-block" data-phase="3">
+        <div class="pb-phase-tag">
+          <span class="pb-phase-num">Fase IV</span>
+          <div class="pb-phase-line"></div>
+          <span class="pb-phase-name">Amplificação</span>
+        </div>
+        <h3 class="pb-title">Inteligência artificial operando<br>sobre <em>seu próprio contexto</em></h3>
+        <p class="pb-body">
+          A maioria das pessoas usa inteligência artificial sobre conhecimento genérico.
+          O Método C.A inverte esta lógica: a IA opera sobre o repositório pessoal
+          que você construiu — seus argumentos, suas referências, seu modo de pensar.
+        </p>
+        <p class="pb-body">
+          Quando o sistema já contém anos de pensamento estruturado, a IA não
+          substitui o raciocínio — ela o estende. Produz sínteses de documentos
+          extensos em segundos. Identifica contradições entre posições adotadas em
+          momentos diferentes. Sugere conexões entre áreas que você não havia
+          aproximado. Transforma o repositório de conhecimento em um interlocutor
+          inteligente treinado no seu próprio pensamento.
+        </p>
+        <div class="pb-quote">
+          <p>"IA generativa sem contexto pessoal é uma biblioteca pública. Com contexto, é um escritório particular."</p>
+        </div>
+        <div class="pb-practices">
+          <div class="pb-practice">
+            <div class="pb-practice-idx">I</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Consulta contextualizada</div>
+              <div class="pb-practice-desc">Ao fazer perguntas à IA, forneça sempre o contexto do seu repositório. Quanto mais específico o contexto, mais precisa e útil a resposta gerada.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">II</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Síntese e redação acelerada</div>
+              <div class="pb-practice-desc">Use a IA para transformar clusters de notas em rascunhos estruturados de artigos, pareceres, relatórios ou capítulos. O pensamento é seu — a velocidade de execução é amplificada.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">III</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Revisão crítica assistida</div>
+              <div class="pb-practice-desc">Submeta argumentos ao escrutínio da IA antes de posicionamentos públicos ou decisões estratégicas. Um interlocutor que não teme contradizer é um ativo raro.</div>
+            </div>
+          </div>
+          <div class="pb-practice">
+            <div class="pb-practice-idx">IV</div>
+            <div class="pb-practice-content">
+              <div class="pb-practice-title">Integração direta com o repositório</div>
+              <div class="pb-practice-desc">Configure a IA para ler e escrever diretamente em seu sistema de notas, eliminando a fricção de copiar e colar. O ciclo entre captura, conexão e amplificação torna-se contínuo e automatizado.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="metodo-cta">
+        <p class="metodo-cta-label">Próximo passo</p>
+        <p class="metodo-cta-text">Pronto para começar? Acesse o material completo do <em>Método C.A</em> agora mesmo.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn-comece" onclick="goTo('cadastro')">
+            Comece Agora
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="btn-outline" onclick="goTo('ferramentas')">
+            Ver as Ferramentas
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     FERRAMENTAS
+══════════════════════════════════════ -->
+<div class="page" id="page-ferramentas">
+  <div class="ferr-wrap">
+
+    <div class="ferr-left">
+      <p class="ferr-section-label">03 — Ferramentas</p>
+      <h2 class="ferr-heading">A infra­estrutura<br>do <em>pensamento</em><br>produtivo</h2>
+      <p class="ferr-lead">
+        Três camadas tecnológicas, cada uma com uma função precisa.
+        Nenhuma é decorativa. Juntas, formam o sistema completo.
+      </p>
+      <div class="ferr-index">
+        <div class="fi-item active" onclick="scrollToFerr(0)">
+          <div class="fi-dot"></div>
+          <span class="fi-label">Repositório de Conhecimento</span>
+        </div>
+        <div class="fi-item" onclick="scrollToFerr(1)">
+          <div class="fi-dot"></div>
+          <span class="fi-label">Motor de Inteligência</span>
+        </div>
+        <div class="fi-item" onclick="scrollToFerr(2)">
+          <div class="fi-dot"></div>
+          <span class="fi-label">Camada de Integração</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ferr-right" id="ferr-scroll">
+
+      <!-- CAMADA 1 -->
+      <div class="ferr-block" data-ferr="0">
+        <div class="fb-layer-tag">
+          <span class="fb-layer-num">Camada I</span>
+          <div class="fb-layer-line"></div>
+          <span class="fb-layer-name">Repositório de Conhecimento</span>
+        </div>
+        <h3 class="fb-title">O arquivo vivo onde<br><em>cada ideia tem endereço</em></h3>
+        <div class="fb-function">Armazenamento local e estruturado</div>
+        <p class="fb-body">
+          A primeira camada é o repositório — um editor de notas baseado em
+          arquivos de texto simples, armazenados integralmente no seu dispositivo.
+          Nenhum servidor externo. Nenhuma empresa com acesso ao seu pensamento.
+          Seus dados existem enquanto você existir, independente de qualquer
+          plataforma ou assinatura.
+        </p>
+        <p class="fb-body">
+          O que distingue esta ferramenta de qualquer outro editor de texto é a
+          capacidade de criar vínculos entre documentos — transformando um conjunto
+          de notas isoladas em uma rede de conhecimento navegável. Cada link
+          é uma ponte entre ideias. O grafo resultante torna visível a arquitetura
+          do seu pensamento.
+        </p>
+        <div class="fb-specs">
+          <div class="fb-spec">
+            <div class="fb-spec-key">Formato</div>
+            <div class="fb-spec-val">Texto simples com marcação leve. Legível por qualquer software, agora e daqui a décadas. Sem dependência de formato proprietário.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Armazenamento</div>
+            <div class="fb-spec-val">100% local. Seus arquivos residem no seu computador ou dispositivo. Compatível com qualquer sistema de backup ou sincronização de sua preferência.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Conexões</div>
+            <div class="fb-spec-val">Links bidirecionais entre documentos. Quando uma nota referencia outra, a referência aparece em ambas — revelando relações que você não havia percebido.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Visualização</div>
+            <div class="fb-spec-val">Grafo interativo que mapeia todas as conexões do repositório. Identifica nós centrais, lacunas e agrupamentos de conhecimento em um único olhar.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Extensibilidade</div>
+            <div class="fb-spec-val">Ecossistema de extensões que permite adaptar o sistema a fluxos de trabalho específicos — de revisão periódica a gestão de projetos e leitura anotada.</div>
+          </div>
+        </div>
+        <div class="fb-quote">
+          <p>"Um repositório pessoal bem construído é o ativo mais durável de um profissional do conhecimento."</p>
+        </div>
+      </div>
+
+      <!-- CAMADA 2 -->
+      <div class="ferr-block" data-ferr="1">
+        <div class="fb-layer-tag">
+          <span class="fb-layer-num">Camada II</span>
+          <div class="fb-layer-line"></div>
+          <span class="fb-layer-name">Motor de Inteligência</span>
+        </div>
+        <h3 class="fb-title">O interlocutor que opera<br><em>sobre o que você sabe</em></h3>
+        <div class="fb-function">Processamento e amplificação por IA</div>
+        <p class="fb-body">
+          A segunda camada é um modelo de linguagem de grande escala — uma
+          inteligência artificial capaz de ler, sintetizar, criticar e expandir
+          qualquer conteúdo que você apresente. Não é um mecanismo de busca.
+          Não é um assistente de tarefas. É um interlocutor intelectual com
+          capacidade de processar volumes que nenhum humano consegue abarcar
+          em tempo útil.
+        </p>
+        <p class="fb-body">
+          Quando alimentado com o contexto do seu repositório pessoal, este motor
+          deixa de operar sobre conhecimento genérico e passa a operar sobre
+          o seu pensamento específico — seus argumentos, suas referências,
+          suas posições. A diferença de qualidade entre uma consulta sem contexto
+          e uma consulta contextualizada é radical.
+        </p>
+        <div class="fb-specs">
+          <div class="fb-spec">
+            <div class="fb-spec-key">Capacidade</div>
+            <div class="fb-spec-val">Processa documentos extensos em segundos. Jurisprudência, contratos, relatórios, teses — o volume que levaria dias de leitura é sintetizado sem perda de nuance.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Raciocínio</div>
+            <div class="fb-spec-val">Capaz de identificar contradições internas em argumentos, sugerir contrapontos e mapear pontos cegos em análises — sem o filtro de concordância que caracteriza interlocutores humanos.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Produção</div>
+            <div class="fb-spec-val">Transforma clusters de notas em rascunhos estruturados. Pareceres, artigos, relatórios, capítulos — o pensamento é seu, a velocidade de execução é amplificada.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Privacidade</div>
+            <div class="fb-spec-val">Configurável para uso em ambientes com restrições de confidencialidade. O nível de exposição de dados é definido pelo usuário, não pela plataforma.</div>
+          </div>
+        </div>
+        <div class="fb-quote">
+          <p>"Com contexto pessoal, a inteligência artificial deixa de ser uma ferramenta genérica e torna-se uma extensão do seu raciocínio."</p>
+        </div>
+      </div>
+
+      <!-- CAMADA 3 -->
+      <div class="ferr-block" data-ferr="2">
+        <div class="fb-layer-tag">
+          <span class="fb-layer-num">Camada III</span>
+          <div class="fb-layer-line"></div>
+          <span class="fb-layer-name">Camada de Integração</span>
+        </div>
+        <h3 class="fb-title">A ponte que elimina<br><em>toda fricção entre camadas</em></h3>
+        <div class="fb-function">Protocolo de comunicação entre sistemas</div>
+        <p class="fb-body">
+          A terceira camada é um protocolo de integração que conecta o repositório
+          diretamente ao motor de inteligência — sem copiar, sem colar, sem interrupções
+          no fluxo de trabalho. O modelo de linguagem passa a ler e escrever
+          no repositório em tempo real, como se fosse um colaborador com acesso
+          direto aos seus arquivos.
+        </p>
+        <p class="pb-body">
+          Esta camada transforma o que seria uma troca manual de informações em
+          um ciclo contínuo e automatizável. Você pergunta; o sistema consulta
+          suas notas, formula a resposta com base no seu contexto específico e,
+          se necessário, cria novos registros diretamente no repositório. O Método C.A
+          opera em velocidade máxima apenas quando as três camadas estão integradas.
+        </p>
+        <div class="fb-specs">
+          <div class="fb-spec">
+            <div class="fb-spec-key">Função</div>
+            <div class="fb-spec-val">Permite que o motor de inteligência leia, busque e escreva no repositório sem intervenção manual. A integração é bidirecional e em tempo real.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Configuração</div>
+            <div class="fb-spec-val">Instalação técnica única, sem manutenção contínua. Após configurado, opera de forma transparente — o usuário interage com o sistema, não com o protocolo.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Automação</div>
+            <div class="fb-spec-val">Permite criar fluxos onde a captura, classificação e conexão de informações ocorrem com mínima intervenção manual — liberando atenção para o trabalho intelectual.</div>
+          </div>
+          <div class="fb-spec">
+            <div class="fb-spec-key">Expansão</div>
+            <div class="fb-spec-val">O mesmo protocolo pode integrar outras fontes — calendários, e-mails, documentos externos — ao repositório central, ampliando o escopo do sistema.</div>
+          </div>
+        </div>
+        <div class="fb-quote">
+          <p>"A fricção entre ferramentas é onde a produtividade morre. A integração é onde ela renasce."</p>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="ferr-cta">
+        <p class="ferr-cta-label">Próximo passo</p>
+        <p class="ferr-cta-text">A infraestrutura está descrita. Dê o próximo passo e acesse o material completo do <em>Método C.A</em>.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn-comece" onclick="goTo('cadastro')">
+            Comece Agora
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="btn-outline" onclick="goTo('aplicacoes')">
+            Ver as Aplicações
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APLICAÇÕES
+══════════════════════════════════════ -->
+<div class="page" id="page-aplicacoes">
+  <div class="aplic-wrap">
+
+    <div class="aplic-left">
+      <p class="aplic-section-label">04 — Aplicações</p>
+      <h2 class="aplic-heading">O método<br>em uso <em>real</em></h2>
+      <p class="aplic-lead">
+        Quatro perfis profissionais. Uma mesma arquitetura de conhecimento.
+        Resultados inteiramente distintos — e igualmente transformadores.
+      </p>
+      <div class="aplic-index">
+        <div class="ai-item active" onclick="scrollToAplic(0)">
+          <div class="ai-dot"></div>
+          <span class="ai-label">O Jurista</span>
+        </div>
+        <div class="ai-item" onclick="scrollToAplic(1)">
+          <div class="ai-dot"></div>
+          <span class="ai-label">O Empresário</span>
+        </div>
+        <div class="ai-item" onclick="scrollToAplic(2)">
+          <div class="ai-dot"></div>
+          <span class="ai-label">O Escritor e Pesquisador</span>
+        </div>
+        <div class="ai-item" onclick="scrollToAplic(3)">
+          <div class="ai-dot"></div>
+          <span class="ai-label">O Estudante</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="aplic-right" id="aplic-scroll">
+
+      <!-- PERFIL 1 — JURISTA -->
+      <div class="aplic-block" data-aplic="0">
+        <div class="ab-profile-tag">
+          <span class="ab-profile-num">Perfil I</span>
+          <div class="ab-profile-line"></div>
+          <span class="ab-profile-name">O Jurista</span>
+        </div>
+        <h3 class="ab-title">Doutrina, jurisprudência e<br>argumentação em <em>tempo real</em></h3>
+        <p class="ab-body">
+          O profissional do direito opera sob pressão permanente de volume e prazo.
+          Pareceres que exigem cruzamento de décadas de jurisprudência. Teses que
+          precisam ser construídas sobre fundamentos doutrinários sólidos e atualizados.
+          Audiências que demandam domínio instantâneo de posições que foram estudadas
+          meses antes. O Método C.A redefine esta equação.
+        </p>
+        <p class="ab-body">
+          Com um repositório estruturado por área do direito, o jurista deixa de
+          depender da memória biológica para acessar argumentos e precedentes.
+          O motor de inteligência processa volumes de jurisprudência em segundos,
+          identifica contradições entre decisões e auxilia na construção de teses
+          com densidade que seria impossível no tempo disponível.
+        </p>
+        <div class="ab-scenarios">
+          <div class="ab-scenario">
+            <div class="ab-scenario-idx">I</div>
+            <div class="ab-scenario-content">
+              <div class="ab-scenario-title">Construção de pareceres complexos</div>
+              <div class="ab-scenario-desc">O sistema reúne automaticamente todas as notas relevantes sobre o tema — doutrina, jurisprudência, posições anteriores do próprio profissional — e as disponibiliza como base para a redação. O tempo de pesquisa cai em 70%.</div>
+            </div>
+          </div>
+          <div class="ab-scenario">
+            <div class="ab-scenario-idx">II</div>
+            <div class="ab-scenario-content">
+              <div class="ab-scenario-title">Acompanhamento de evolução jurisprudencial</div>
+              <div class="ab-scenario-desc">Novos acórdãos são capturados, anotados e conectados às notas existentes. O jurista mantém uma visão evolutiva da jurisprudência sem depender de alertas externos ou revisão manual periódica.</div>
+            </div>
+          </div>
+          <div class="ab-scenario">
+            <div class="ab-scenario-idx">III</div>
+            <div class="ab-scenario-content">
+              <div class="ab-scenario-title">Preparo para audiências e sustentações</div>
+              <div class="ab-scenario-desc">O motor de inteligência simula questionamentos e contrapontos com base no repositório de argumentação, permitindo que o profissional antecipe objeções e refine posições antes de qualquer exposição pública.</div>
+            </div>
+          </div>
+        </div>
+        <div class="ab-quote">
+          <p>"Conhecimento jurídico acumulado sem organização é erudição estéril. Com organização, é vantagem competitiva."</p>
+        </div>
+      </div>
+
+      <!-- PERFIL 2 — EMPRESÁRIO -->
+      <div class="aplic-block" data-aplic="1">
+        <div class="ab-profile-tag">
+          <span class="ab-profile-num">Perfil II</span>
+          <div class="ab-profile-line"></div>
+          <span class="ab-profile-name">O Empresário</span>
+        </div>
+        <h3 class="ab-title">Decisões estratégicas com<br><em>contexto histórico completo</em></h3>
+        <p class="ab-body">
+          O empresário que decide sem contexto histórico repete erros que já cometeu
+          — ou que outros cometeram antes dele. Reuniões de conselho sem registro
+          estruturado. Estratégias construídas sem memória das premissas que as
+          fundamentaram. Análises de mercado que existem por meses antes de serem
+          descartadas sem aproveitamento.
+        </p>
+        <p class="ab-body">
+          Com o Método C.A, cada decisão estratégica relevante é registrada com
+          seu contexto, premissas e resultados. O repositório torna-se uma memória
+          institucional pessoal — acessível em segundos, consultável pela IA,
+          que identifica padrões e inconsistências que escapariam a qualquer análise manual.
+        </p>
+        <div class="ab-scenarios">
+          <div class="ab-scenario">
+            <div class="ab-scenario-idx">I</div>
+            <div class="ab-scenario-content">
+              <div class="ab-scenario-title">Memória estratégica de longo prazo</div>
+              <div class="ab-scenario-desc">Decisões, premissas e resultados são registrados de forma estruturada. Ao revisitar uma área de negócio, o empresário tem acesso imediato ao histórico completo de raciocínio que fundamentou escolhas anteriores.</div>
+            </div>
+          </div>
+          <div class="ab-scenario">
+            <div class="ab-scenario-idx">II</div>
+            <div class="ab-scenario-content">
+              <div class="ab-scenario-title">Análise acelerada de oportunidades</div>
+              <div class="ab-scenario-desc">Relatórios de mercado, teses de investimento e benchmarks competitivos são processados pelo motor de inteligência e cruzados com o histórico do repositório, gerando análises que levam horas em minutos.</div>
+            </div>
+          </div>
+          <div class="ab-scenario">
+            <div class="ab-scenario-idx">III</div>
+            <div class="ab-scenario-content">
+              <div class="ab-scenario-title">Preparo para negociações e conselhos</div>
+              <div class="ab-scenario-desc">O sistema reúne todo o contexto relevante de uma negociação — histórico, posições, interesses das partes, precedentes — e permite que o empresário entre em qualquer reunião com domínio total do material.</div>
+            </div>
+          </div>
+        </div>
+        <div class="ab-quote">
+          <p>"Liderança de alta performance é, em grande parte, uma questão de qualidade de contexto no momento da decisão."</p>
+        </div>
+      </div>
+
+      <!-- PERFIL 3 — ESCRITOR / PESQUISADOR -->
+      <div class="aplic-block" data-aplic="2">
+        <div class="ab-profile-tag">
+          <span class="ab-profile-num">Perfil III</span>
+          <div class="ab-profile-line"></div>
+          <span class="ab-profile-name">O Escritor e o Pesquisador</span>
+        </div>
+        <h3 class="ab-title">Anos de leitura convertidos<br>em <em>obra estruturada</em></h3>
+        <p class="ab-body">
+          Escritores e pesquisadores vivem um paradoxo particular: quanto mais leem,
+          mais difícil se torna localizar e articular o que já sabem. Fichamentos
+          dispersos. Referências anotadas em sistemas incompatíveis. Insights
+          registrados em formatos que não dialogam entre si. O momento de escrever
+          é frequentemente o momento de redescobrir o que já se sabia — e isso tem um custo.
+        </p>
+        <p class="ab-body">
+          O repositório estruturado pelo Método C.A transforma anos de leitura em
+          material imediatamente acessível e produtivo. O motor de inteligência
+          navega pelo acervo pessoal, identifica conexões entre autores e teorias
+          que o pesquisador não havia aproximado e produz sínteses que alimentam
+          o processo criativo em vez de substituí-lo.
+        </p>
+        <div class="ab-scenarios">
+          <div class="ab-scenario">
+            <div class="ab-scenario-idx">I</div>
+            <div class="ab-scenario-content">
+              <div class="ab-scenario-title">Gestão de referências e anotações</div>
+              <div class="ab-scenario-desc">Todo material lido é capturado com suas passagens relevantes, contexto de leitura e primeiras interpretações. O acervo cresce de forma organizada, buscável e conectada — sem depender de sistemas externos de referência.</div>
+            </div>
+          </div>
+          <div class="ab-scenario">
+            <div class="ab-scenario-idx">II</div>
+            <div class="ab-scenario-content">
+              <div class="ab-scenario-title">Identificação de lacunas e conexões</div>
+              <div class="ab-scenario-desc">O motor de inteligência mapeia o repositório e identifica áreas onde a pesquisa está densa e áreas onde há lacunas — além de conexões entre autores e temas que o pesquisador não havia percebido explicitamente.</div>
+            </div>
+          </div>
+          <div class="ab-scenario">
+            <div class="ab-scenario-idx">III</div>
+            <div class="ab-scenario-content">
+              <div class="ab-scenario-title">Redação progressiva e estruturada</div>
+              <div class="ab-scenario-desc">Capítulos e artigos são construídos progressivamente a partir de clusters de notas, com o motor de inteligência gerando rascunhos que o autor refina — mantendo a voz e o argumento, acelerando a execução.</div>
+            </div>
+          </div>
+        </div>
+        <div class="ab-quote">
+          <p>"Uma obra de não-ficção é, antes de tudo, um problema de organização. Quem organiza melhor, escreve melhor."</p>
+        </div>
+      </div>
+
+      <!-- PERFIL 4 — ESTUDANTE -->
+      <div class="aplic-block" data-aplic="3">
+        <div class="ab-profile-tag">
+          <span class="ab-profile-num">Perfil IV</span>
+          <div class="ab-profile-line"></div>
+          <span class="ab-profile-name">O Estudante</span>
+        </div>
+        <h3 class="ab-title">Volume de conteúdo convertido<br>em <em>domínio real</em></h3>
+        <p class="ab-body">
+          O estudante de alta performance não é o que mais horas estuda — é o que
+          converte o tempo de estudo em compreensão durável com maior eficiência.
+          A maioria dos métodos de estudo tradicionais produz retenção de curto prazo:
+          adequada para provas, inadequada para o exercício profissional que virá depois.
+        </p>
+        <p class="ab-body">
+          O Método C.A muda a natureza do estudo. Em vez de acumular anotações
+          lineares por disciplina, o estudante constrói um repositório de conceitos
+          interconectados — onde cada novo aprendizado se ancora no que já existe.
+          O motor de inteligência atua como um professor disponível a qualquer hora,
+          capaz de explicar, questionar, simular provas e identificar os pontos
+          onde a compreensão ainda é superficial.
+        </p>
+        <div class="ab-scenarios">
+          <div class="ab-scenario">
+            <div class="ab-scenario-idx">I</div>
+            <div class="ab-scenario-content">
+              <div class="ab-scenario-title">Construção de base conceitual permanente</div>
+              <div class="ab-scenario-desc">Conceitos são registrados com suas definições, exemplos, exceções e conexões com outros conceitos. O conhecimento acumula-se de forma estruturada — não desaparece após cada avaliação.</div>
+            </div>
+          </div>
+          <div class="ab-scenario">
+            <div class="ab-scenario-idx">II</div>
+            <div class="ab-scenario-content">
+              <div class="ab-scenario-title">Revisão ativa com interrogação pela IA</div>
+              <div class="ab-scenario-desc">O motor de inteligência gera questões baseadas no conteúdo do repositório pessoal do estudante — não questões genéricas, mas interrogações calibradas ao que já foi estudado e ao que ainda está impreciso.</div>
+            </div>
+          </div>
+          <div class="ab-scenario">
+            <div class="ab-scenario-idx">III</div>
+            <div class="ab-scenario-content">
+              <div class="ab-scenario-title">Preparação para concursos e exames de alta exigência</div>
+              <div class="ab-scenario-desc">O sistema reúne em segundos todo o material registrado sobre um tema específico, elimina a busca dispersa e permite que o tempo de preparação seja dedicado ao raciocínio — não à logística de estudo.</div>
+            </div>
+          </div>
+        </div>
+        <div class="ab-quote">
+          <p>"Estudar é construir estrutura mental. Quem tem sistema, aprende mais rápido — e retém por mais tempo."</p>
+        </div>
+      </div>
+
+      <!-- CTA FINAL -->
+      <div class="aplic-cta-final">
+        <p class="aplic-cta-eyebrow">O sistema está descrito. A decisão é sua.</p>
+        <h3 class="aplic-cta-headline">
+          O Método C.A existe para quem trata<br>o conhecimento como <em>capital</em>.
+        </h3>
+        <p class="aplic-cta-body">
+          Não é uma solução para todos. É uma arquitetura para profissionais que
+          já perceberam que a vantagem competitiva mais durável não vem de trabalhar
+          mais horas — vem de pensar com mais estrutura, profundidade e velocidade.
+        </p>
+        <div class="aplic-cta-buttons">
+          <button class="btn-comece" onclick="goTo('cadastro')">
+            Comece Agora
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     CADASTRO
+══════════════════════════════════════ -->
+<div class="page" id="page-cadastro">
+  <div class="cadastro-wrap">
+
+    <!-- LEFT — pitch -->
+    <div class="cadastro-left">
+      <p class="cad-eyebrow">Acesso ao Material</p>
+      <h2 class="cad-heading">Receba o e-book<br>do Método <em>C.A</em><br>agora mesmo</h2>
+      <p class="cad-lead">
+        Preencha os dados ao lado e receba imediatamente o material
+        completo sobre como construir seu Cérebro Artificial — com
+        o passo a passo das quatro fases do método.
+      </p>
+
+      <div class="cad-promise">
+        <div class="cad-promise-item">
+          <div class="cad-promise-mark"></div>
+          <p class="cad-promise-text"><strong>Entrega imediata.</strong> O e-book é enviado assim que o cadastro é confirmado, sem espera.</p>
+        </div>
+        <div class="cad-promise-item">
+          <div class="cad-promise-mark"></div>
+          <p class="cad-promise-text"><strong>Material exclusivo.</strong> Conteúdo desenvolvido para profissionais do conhecimento — juristas, empresários, escritores e pesquisadores.</p>
+        </div>
+        <div class="cad-promise-item">
+          <div class="cad-promise-mark"></div>
+          <p class="cad-promise-text"><strong>Sem spam.</strong> Seus dados são usados exclusivamente para o envio do material e comunicações relacionadas ao Método C.A.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT — form -->
+    <div class="cadastro-right">
+      <p class="cad-form-label">05 — Cadastro</p>
+
+      <form class="cad-form" id="cad-form" onsubmit="submitCadastro(event)">
+
+        <div class="cad-field">
+          <label class="cad-label" for="cad-nome">Nome completo</label>
+          <input class="cad-input" id="cad-nome" type="text"
+            placeholder="Seu nome" autocomplete="name" required />
+        </div>
+
+        <div class="cad-field">
+          <label class="cad-label" for="cad-tel">Telefone</label>
+          <input class="cad-input" id="cad-tel" type="tel"
+            placeholder="+55 (00) 00000-0000" autocomplete="tel" required />
+        </div>
+
+        <div class="cad-field">
+          <label class="cad-label" for="cad-email">E-mail</label>
+          <input class="cad-input" id="cad-email" type="email"
+            placeholder="seu@email.com" autocomplete="email" required />
+        </div>
+
+        <div class="cad-field" style="position:relative;">
+          <label class="cad-label" for="cad-ocup">Ocupação</label>
+          <select class="cad-select" id="cad-ocup" required>
+            <option value="" disabled selected>Selecione sua área</option>
+            <option value="Jurista / Advogado">Jurista / Advogado</option>
+            <option value="Empresário / Executivo">Empresário / Executivo</option>
+            <option value="Escritor / Jornalista">Escritor / Jornalista</option>
+            <option value="Pesquisador / Acadêmico">Pesquisador / Acadêmico</option>
+            <option value="Estudante">Estudante</option>
+            <option value="Gestor / Consultor">Gestor / Consultor</option>
+            <option value="Outra">Outra</option>
+          </select>
+          <span class="cad-select-arrow">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+
+        <div class="cad-form-footer">
+
+          <!-- loading -->
+          <div class="cad-loading" id="cad-loading">
+            <div class="cad-spinner"></div>
+            <span class="cad-loading-text">Registrando seu acesso...</span>
+          </div>
+
+          <!-- success -->
+          <div class="cad-feedback" id="cad-success">
+            <div class="cad-feedback-icon success">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8l4 4 6-7" stroke="rgba(80,180,160,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <div class="cad-feedback-title">Acesso confirmado</div>
+              <div class="cad-feedback-body">O e-book do Método C.A foi enviado para o seu e-mail. Verifique também a pasta de spam caso não encontre na caixa de entrada.</div>
+            </div>
+          </div>
+
+          <!-- error -->
+          <div class="cad-feedback" id="cad-error">
+            <div class="cad-feedback-icon error">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 4v5M8 11v1" stroke="rgba(220,80,80,0.9)" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <div class="cad-feedback-title">Erro ao registrar</div>
+              <div class="cad-feedback-body" id="cad-error-msg">Ocorreu um problema ao salvar seu cadastro. Tente novamente ou entre em contato.</div>
+            </div>
+          </div>
+
+          <button class="cad-submit" id="cad-btn" type="submit">
+            Comece Agora
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <p class="cad-legal">
+            Ao prosseguir, você concorda com o uso dos seus dados para
+            o envio do material solicitado. Nenhuma informação é
+            compartilhada com terceiros.
+          </p>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+/* ════════════════════════════════════════
+   SUPABASE CONFIG
+   ⚠️  Substitua SUPABASE_URL e SUPABASE_ANON_KEY
+       pelos valores do seu projeto Supabase.
+════════════════════════════════════════ */
+const SUPABASE_URL      = 'https://ynaeybytorspfsdvikzb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InluYWV5Ynl0b3JzcGZzZHZpa3piIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1ODMzMzgsImV4cCI6MjA5MzE1OTMzOH0.gXh2Vv2LJlkACb7kqNpEiGhIU0U2wf6Tt_ogtLdKGIk';
+
+/* Supabase REST helpers (sem SDK — puro fetch) */
+async function supabaseInsert(table, row) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey':        SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=representation',
+    },
+    body: JSON.stringify(row),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function supabaseGetEbook() {
+  /* Busca o primeiro ebook ativo na tabela "ebooks" */
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/ebooks?ativo=eq.true&limit=1&select=url_download,titulo`,
+    {
+      headers: {
+        'apikey':        SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    }
+  );
+  if (!res.ok) throw new Error('Ebook não encontrado');
+  const data = await res.json();
+  if (!data.length) throw new Error('Nenhum ebook ativo cadastrado');
+  return data[0];
+}
+
+/* ════════════════════════════════════════
+   FORM SUBMIT
+════════════════════════════════════════ */
+async function submitCadastro(e) {
+  e.preventDefault();
+
+  const nome  = document.getElementById('cad-nome').value.trim();
+  const tel   = document.getElementById('cad-tel').value.trim();
+  const email = document.getElementById('cad-email').value.trim();
+  const ocup  = document.getElementById('cad-ocup').value;
+
+  const btn     = document.getElementById('cad-btn');
+  const loading = document.getElementById('cad-loading');
+  const success = document.getElementById('cad-success');
+  const errBox  = document.getElementById('cad-error');
+  const errMsg  = document.getElementById('cad-error-msg');
+
+  /* reset */
+  success.classList.remove('visible');
+  errBox.classList.remove('visible');
+  loading.classList.add('visible');
+  btn.disabled = true;
+
+  try {
+    /* 1. Salvar lead no Supabase */
+    await supabaseInsert('leads', {
+      nome,
+      telefone: tel,
+      email,
+      ocupacao: ocup,
+      origem:   'site_metodo_ca',
+      criado_em: new Date().toISOString(),
+    });
+
+    /* 2. Buscar URL do ebook */
+    const ebook = await supabaseGetEbook();
+
+    /* 3. Abrir download em nova aba */
+    window.open(ebook.url_download, '_blank');
+
+    /* 4. Feedback de sucesso */
+    loading.classList.remove('visible');
+    success.classList.add('visible');
+    document.getElementById('cad-form').reset();
+
+  } catch (err) {
+    loading.classList.remove('visible');
+    errMsg.textContent = err.message || 'Erro inesperado. Tente novamente.';
+    errBox.classList.add('visible');
+    btn.disabled = false;
+    console.error('[Método CA] Erro no cadastro:', err);
+  }
+}
+
+/* ════════════════════════════════════════
+   ROUTER
+════════════════════════════════════════ */
+function goTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  const link = document.getElementById('nav-' + pageId);
+  if (page) page.classList.add('active');
+  if (link) link.classList.add('active');
+  if (pageId === 'conceito') initConceitoObserver();
+  if (pageId === 'metodo')   initMetodoObserver();
+  if (pageId === 'ferramentas') initFerrObserver();
+  if (pageId === 'aplicacoes')  initAplicObserver();
+}
+
+/* set home active on load */
+document.getElementById('page-home').classList.add('active');
+
+/* ════════════════════════════════════════
+   CONCEITO — scroll observer
+════════════════════════════════════════ */
+function initConceitoObserver() {
+  const scroller = document.getElementById('conceito-scroll');
+  const blocks   = document.querySelectorAll('.concept-block');
+  const cta      = document.querySelector('.conceito-cta');
+  const items    = document.querySelectorAll('.prog-item');
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        const idx = entry.target.dataset.block;
+        if (idx !== undefined) {
+          items.forEach(i => i.classList.remove('active'));
+          if (items[idx]) items[idx].classList.add('active');
+        }
+      }
+    });
+  }, { root: scroller, threshold: 0.25 });
+
+  blocks.forEach(b => io.observe(b));
+  if (cta) io.observe(cta);
+}
+
+function scrollToBlock(idx) {
+  const block = document.querySelector('[data-block="' + idx + '"]');
+  const scroller = document.getElementById('conceito-scroll');
+  if (block && scroller) {
+    scroller.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
+  }
+}
+
+/* ════════════════════════════════════════
+   MÉTODO — scroll observer
+════════════════════════════════════════ */
+function initMetodoObserver() {
+  const scroller = document.getElementById('metodo-scroll');
+  const phases   = document.querySelectorAll('.phase-block');
+  const cta      = document.querySelector('.metodo-cta');
+  const items    = document.querySelectorAll('.mt-item');
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        const idx = entry.target.dataset.phase;
+        if (idx !== undefined) {
+          items.forEach(i => i.classList.remove('active'));
+          if (items[idx]) items[idx].classList.add('active');
+        }
+      }
+    });
+  }, { root: scroller, threshold: 0.2 });
+
+  phases.forEach(b => io.observe(b));
+  if (cta) io.observe(cta);
+}
+
+function scrollToPhase(idx) {
+  const block    = document.querySelector('[data-phase="' + idx + '"]');
+  const scroller = document.getElementById('metodo-scroll');
+  if (block && scroller) {
+    scroller.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
+  }
+}
+
+
+/* ════════════════════════════════════════
+   FERRAMENTAS — scroll observer
+════════════════════════════════════════ */
+function initFerrObserver() {
+  const scroller = document.getElementById('ferr-scroll');
+  const blocks   = document.querySelectorAll('.ferr-block');
+  const cta      = document.querySelector('.ferr-cta');
+  const items    = document.querySelectorAll('.fi-item');
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        const idx = entry.target.dataset.ferr;
+        if (idx !== undefined) {
+          items.forEach(i => i.classList.remove('active'));
+          if (items[idx]) items[idx].classList.add('active');
+        }
+      }
+    });
+  }, { root: scroller, threshold: 0.2 });
+
+  blocks.forEach(b => io.observe(b));
+  if (cta) io.observe(cta);
+}
+
+function scrollToFerr(idx) {
+  const block    = document.querySelector('[data-ferr="' + idx + '"]');
+  const scroller = document.getElementById('ferr-scroll');
+  if (block && scroller) scroller.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
+}
+
+/* ════════════════════════════════════════
+   APLICAÇÕES — scroll observer
+════════════════════════════════════════ */
+function initAplicObserver() {
+  const scroller = document.getElementById('aplic-scroll');
+  const blocks   = document.querySelectorAll('.aplic-block');
+  const cta      = document.querySelector('.aplic-cta-final');
+  const items    = document.querySelectorAll('.ai-item');
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        const idx = entry.target.dataset.aplic;
+        if (idx !== undefined) {
+          items.forEach(i => i.classList.remove('active'));
+          if (items[idx]) items[idx].classList.add('active');
+        }
+      }
+    });
+  }, { root: scroller, threshold: 0.2 });
+
+  blocks.forEach(b => io.observe(b));
+  if (cta) io.observe(cta);
+}
+
+function scrollToAplic(idx) {
+  const block    = document.querySelector('[data-aplic="' + idx + '"]');
+  const scroller = document.getElementById('aplic-scroll');
+  if (block && scroller) scroller.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
+}
+
+/* ════════════════════════════════════════
+   GLOBAL GRAPH CANVAS
+════════════════════════════════════════ */
+(function () {
+  const canvas = document.getElementById('graph-canvas');
+  const ctx    = canvas.getContext('2d');
+
+  const G = 'rgba(200,154,46,';
+  const P = 'rgba(130,100,220,';
+  const T = 'rgba(80,180,160,';
+  const B = 'rgba(80,140,220,';
+  const M = 'rgba(160,155,140,';
+
+  const DEFS = [
+    { label: 'Segundo Cérebro', c: G, r: 12, hub: true },
+    { label: 'Método C.A',      c: G, r: 10, hub: true },
+    { label: 'Inteligência',    c: B, r: 10, hub: true },
+    { label: 'Conhecimento',    c: T, r: 7  },
+    { label: 'Zettelkasten',    c: T, r: 6  },
+    { label: 'Capturar',        c: M, r: 5  },
+    { label: 'Organizar',       c: M, r: 5  },
+    { label: 'Amplificar',      c: M, r: 5  },
+    { label: 'Doutrina',        c: G, r: 7  },
+    { label: 'Estratégia',      c: G, r: 6  },
+    { label: 'Síntese',         c: B, r: 6  },
+    { label: 'Arquivo',         c: P, r: 6  },
+    { label: 'Conexões',        c: P, r: 5  },
+    { label: 'Grafo',           c: P, r: 5  },
+    { label: 'Leitura',         c: T, r: 5  },
+    { label: 'Memória',         c: T, r: 5  },
+    { label: 'Produção',        c: T, r: 5  },
+    { label: 'Contexto',        c: M, r: 4  },
+    { label: 'Notas',           c: M, r: 4  },
+    { label: 'Tags',            c: M, r: 4  },
+    { label: 'Pesquisa',        c: M, r: 4  },
+    { label: 'Referências',     c: M, r: 4  },
+    { label: 'Análise',         c: B, r: 5  },
+    { label: 'Revisão',         c: P, r: 4  },
+    { label: 'Prompts',         c: B, r: 5  },
+    { label: 'Insights',        c: T, r: 6  },
+    { label: 'Decisão',         c: M, r: 4  },
+    { label: 'Ideia',           c: G, r: 5  },
+    { label: 'Argumento',       c: G, r: 4  },
+    { label: 'Padrão',          c: T, r: 5  },
+  ];
+
+  const LINKS = [
+    [0,1],[0,2],[0,3],[0,8],[0,14],[0,15],[0,16],[0,25],[0,29],
+    [1,11],[1,12],[1,13],[1,5],[1,6],[1,7],[1,23],[1,18],[1,19],[1,20],[1,21],
+    [2,10],[2,22],[2,24],[2,3],
+    [3,4],[3,14],[3,25],
+    [8,9],[8,27],[8,28],
+    [10,22],[10,1],
+    [11,12],[11,13],[11,18],
+    [4,18],[4,19],
+    [14,15],[15,16],[16,27],
+    [25,29],[25,16],[25,14],
+    [22,24],[24,10],
+    [17,1],[17,0],
+    [26,0],[26,3],
+  ];
+
+  let W, H, nodes = [];
+  const mouse = { x: -9999, y: -9999 };
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function build() {
+    const cx = W / 2, cy = H / 2;
+    nodes = DEFS.map((d, i) => {
+      const angle  = (i / DEFS.length) * Math.PI * 2;
+      const orbit  = d.hub ? 120 : 95 + Math.random() * 290;
+      const jitter = d.hub ? 0 : (Math.random() - 0.5) * 70;
+      return {
+        ...d,
+        x:  cx + Math.cos(angle) * orbit + jitter,
+        y:  cy + Math.sin(angle) * orbit + jitter,
+        vx: (Math.random() - 0.5) * 0.16,
+        vy: (Math.random() - 0.5) * 0.16,
+        phase: Math.random() * Math.PI * 2,
+        spd:   0.26 + Math.random() * 0.4,
+        pulse: 0,
+        glow:  false,
+        ox: 0, oy: 0,
+      };
+    });
+  }
+
+  let ai = 0;
+  setInterval(() => {
+    if (nodes[ai]) nodes[ai].glow = false;
+    ai = Math.floor(Math.random() * nodes.length);
+    if (nodes[ai]) { nodes[ai].glow = true; nodes[ai].pulse = 1; }
+  }, 1400);
+
+  let t = 0;
+  function tick() {
+    ctx.clearRect(0, 0, W, H);
+    t += 0.008;
+
+    nodes.forEach(n => {
+      n.ox = Math.sin(t * n.spd + n.phase) * 8;
+      n.oy = Math.cos(t * n.spd * 0.72 + n.phase) * 6;
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 50 || n.x > W - 50) n.vx *= -1;
+      if (n.y < 50 || n.y > H - 50) n.vy *= -1;
+      if (n.pulse > 0) n.pulse -= 0.014;
+
+      const nx = n.x + n.ox, ny = n.y + n.oy;
+      const dx = nx - mouse.x, dy = ny - mouse.y;
+      const d  = Math.sqrt(dx * dx + dy * dy);
+      if (d < 140 && d > 0) {
+        const f = (140 - d) / 140 * 0.85;
+        n.vx += (dx / d) * f; n.vy += (dy / d) * f;
+        n.vx = Math.max(-1.5, Math.min(1.5, n.vx));
+        n.vy = Math.max(-1.5, Math.min(1.5, n.vy));
+      }
+    });
+
+    LINKS.forEach(([a, b]) => {
+      const na = nodes[a], nb = nodes[b];
+      if (!na || !nb) return;
+      const ax = na.x + na.ox, ay = na.y + na.oy;
+      const bx = nb.x + nb.ox, by = nb.y + nb.oy;
+      const dist  = Math.hypot(bx - ax, by - ay);
+      const alpha = Math.max(0, 1 - dist / 440);
+      const hot   = na.glow || nb.glow;
+
+      ctx.beginPath();
+      ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
+      ctx.strokeStyle = hot ? G + (alpha * 0.68) + ')' : M + (alpha * 0.18) + ')';
+      ctx.lineWidth   = hot ? 1.1 : 0.5;
+      ctx.stroke();
+
+      if (hot && alpha > 0.28) {
+        const p = (t * 0.72) % 1;
+        ctx.beginPath();
+        ctx.arc(ax + (bx - ax) * p, ay + (by - ay) * p, 1.8, 0, Math.PI * 2);
+        ctx.fillStyle = G + '0.95)';
+        ctx.fill();
+      }
+    });
+
+    nodes.forEach(n => {
+      const nx = n.x + n.ox, ny = n.y + n.oy;
+      const r  = n.r + (n.hub ? 2 : 0);
+      const pl = Math.max(0, n.pulse);
+
+      if (n.glow || pl > 0) {
+        const grd = ctx.createRadialGradient(nx, ny, r * 0.5, nx, ny, r * 4);
+        grd.addColorStop(0, n.c + (0.3 + pl * 0.28) + ')');
+        grd.addColorStop(1, n.c + '0)');
+        ctx.beginPath();
+        ctx.arc(nx, ny, r * 4, 0, Math.PI * 2);
+        ctx.fillStyle = grd;
+        ctx.fill();
+      }
+
+      if (n.hub) {
+        ctx.beginPath();
+        ctx.arc(nx, ny, r + 5, 0, Math.PI * 2);
+        ctx.strokeStyle = n.c + '0.18)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      const g2 = ctx.createRadialGradient(nx - r * 0.3, ny - r * 0.3, 0, nx, ny, r);
+      g2.addColorStop(0, n.c + (n.glow ? 1 : 0.88) + ')');
+      g2.addColorStop(1, n.c + (n.glow ? 0.62 : 0.35) + ')');
+      ctx.beginPath();
+      ctx.arc(nx, ny, r, 0, Math.PI * 2);
+      ctx.fillStyle = g2;
+      ctx.fill();
+
+      if (n.r >= 6) {
+        ctx.font = n.hub
+          ? '500 11px "DM Sans",sans-serif'
+          : '300 9.5px "DM Sans",sans-serif';
+        ctx.textAlign  = 'center';
+        ctx.fillStyle  = n.c + (n.glow ? 0.95 : 0.55) + ')';
+        ctx.fillText(n.label, nx, ny + r + 13);
+      }
+    });
+
+    requestAnimationFrame(tick);
+  }
+
+  document.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  window.addEventListener('resize', () => { resize(); build(); });
+  resize(); build(); tick();
+})();
+</script>
+</body>
+</html>
