@@ -166,8 +166,12 @@ export async function createCreditTransaction(
   });
   const json = await resp.json();
   if (!resp.ok) {
-    const msg = json.message || json.errors ? JSON.stringify(json.errors) : `HTTP ${resp.status}`;
+    const msg = json.message || (json.errors ? JSON.stringify(json.errors) : `HTTP ${resp.status}`);
     throw new Error(`hubmais credit: ${msg}`);
+  }
+  // Hubmais may return 200 with a "message" field for declined cards
+  if (json.message && !json.id && !json.uid) {
+    throw new Error(`hubmais credit: ${json.message}`);
   }
 
   return {
