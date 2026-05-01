@@ -1,0 +1,10 @@
+# local state — never commit
+.claude/
+.DS_Store
+node_modules/
+
+# Supabase CLI local state (project ref is committed in supabase/config.toml)
+supabase/.temp/
+supabase/.branches/
+.env
+.env.local
