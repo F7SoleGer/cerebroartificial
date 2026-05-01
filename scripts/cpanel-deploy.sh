@@ -74,6 +74,7 @@ upload_file() {
   printf '  ↑ %-60s → %s\n' "$local_path" "$remote_dir"
   api "Fileman/upload_files" \
     -F "dir=${remote_dir}" \
+    -F "overwrite=1" \
     -F "file-1=@${local_path}"
 }
 
