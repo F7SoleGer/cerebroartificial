@@ -3037,8 +3037,8 @@ function scrollToAplic(idx) { scrollToSection('aplic-scroll',    'aplic', idx); 
   let glowAccum = 0;
 
   let t = 0;
-  function tick(now) {
-    const dt = now - (tick._last || now);
+  function tick(now = performance.now()) {
+    const dt = now - (tick._last ?? now);
     tick._last = now;
 
     glowAccum += dt;
