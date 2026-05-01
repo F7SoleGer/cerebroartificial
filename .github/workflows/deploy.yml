@@ -24,11 +24,17 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Inject secrets into index.html
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          sed -i \
-            -e "s|__SUPABASE_URL__|${{ secrets.SUPABASE_URL }}|g" \
-            -e "s|__SUPABASE_ANON_KEY__|${{ secrets.SUPABASE_ANON_KEY }}|g" \
-            index.html
+          python3 - <<'EOF'
+          import os, pathlib
+          html = pathlib.Path("index.html").read_text()
+          html = html.replace("__SUPABASE_URL__", os.environ["SUPABASE_URL"])
+          html = html.replace("__SUPABASE_ANON_KEY__", os.environ["SUPABASE_ANON_KEY"])
+          pathlib.Path("index.html").write_text(html)
+          EOF
 
       - uses: actions/configure-pages@v4
 

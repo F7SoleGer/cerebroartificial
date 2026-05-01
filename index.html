@@ -2742,6 +2742,10 @@ nav {
 const SUPABASE_URL      = '__SUPABASE_URL__';
 const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
 
+if (SUPABASE_URL.startsWith('__') || SUPABASE_ANON_KEY.startsWith('__')) {
+  console.error('[Método CA] Secrets não foram injetados no deploy.');
+}
+
 /* Supabase REST helpers (sem SDK — puro fetch) */
 async function supabaseInsert(table, row) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
@@ -2781,8 +2785,11 @@ async function supabaseGetEbook() {
 /* ════════════════════════════════════════
    FORM SUBMIT
 ════════════════════════════════════════ */
+let _submitting = false;
+
 async function submitCadastro(e) {
   e.preventDefault();
+  if (_submitting) return;
 
   const nome  = document.getElementById('cad-nome').value.trim();
   const tel   = document.getElementById('cad-tel').value.trim();
@@ -2795,11 +2802,11 @@ async function submitCadastro(e) {
   const errBox  = document.getElementById('cad-error');
   const errMsg  = document.getElementById('cad-error-msg');
 
-  /* reset */
+  _submitting = true;
+  btn.disabled = true;
   success.classList.remove('visible');
   errBox.classList.remove('visible');
   loading.classList.add('visible');
-  btn.disabled = true;
 
   try {
     /* 1. Salvar lead no Supabase */
@@ -2818,7 +2825,6 @@ async function submitCadastro(e) {
     /* 3. Abrir download em nova aba */
     window.open(ebook.url_download, '_blank');
 
-    /* 4. Feedback de sucesso */
     loading.classList.remove('visible');
     success.classList.add('visible');
     document.getElementById('cad-form').reset();
@@ -2829,6 +2835,8 @@ async function submitCadastro(e) {
     errBox.classList.add('visible');
     btn.disabled = false;
     console.error('[Método CA] Erro no cadastro:', err);
+  } finally {
+    _submitting = false;
   }
 }
 
@@ -2878,7 +2886,7 @@ function initConceitoObserver() {
 }
 
 function scrollToBlock(idx) {
-  const block = document.querySelector('[data-block="' + idx + '"]');
+  const block = document.querySelector('[data-block="' + parseInt(idx, 10) + '"]');
   const scroller = document.getElementById('conceito-scroll');
   if (block && scroller) {
     scroller.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
@@ -2912,7 +2920,7 @@ function initMetodoObserver() {
 }
 
 function scrollToPhase(idx) {
-  const block    = document.querySelector('[data-phase="' + idx + '"]');
+  const block    = document.querySelector('[data-phase="' + parseInt(idx, 10) + '"]');
   const scroller = document.getElementById('metodo-scroll');
   if (block && scroller) {
     scroller.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
@@ -2947,7 +2955,7 @@ function initFerrObserver() {
 }
 
 function scrollToFerr(idx) {
-  const block    = document.querySelector('[data-ferr="' + idx + '"]');
+  const block    = document.querySelector('[data-ferr="' + parseInt(idx, 10) + '"]');
   const scroller = document.getElementById('ferr-scroll');
   if (block && scroller) scroller.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
 }
@@ -2979,7 +2987,7 @@ function initAplicObserver() {
 }
 
 function scrollToAplic(idx) {
-  const block    = document.querySelector('[data-aplic="' + idx + '"]');
+  const block    = document.querySelector('[data-aplic="' + parseInt(idx, 10) + '"]');
   const scroller = document.getElementById('aplic-scroll');
   if (block && scroller) scroller.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
 }
