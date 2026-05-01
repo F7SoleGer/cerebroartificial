@@ -88,6 +88,31 @@
           <label class="checkout-payment-option"><input type="radio" name="pagamento" value="boleto" /><span class="checkout-payment-option-label">Boleto</span><span class="checkout-payment-option-hint">à vista</span></label>
         </div>
 
+        <div class="checkout-card-fields" id="chk-card-fields">
+          <div class="cad-field">
+            <label class="cad-label" for="chk-card-number">Número do cartão</label>
+            <input class="cad-input" id="chk-card-number" type="text" inputmode="numeric" maxlength="23" autocomplete="cc-number" placeholder="0000 0000 0000 0000" />
+          </div>
+          <div class="cad-field">
+            <label class="cad-label" for="chk-card-name">Nome impresso no cartão</label>
+            <input class="cad-input" id="chk-card-name" type="text" autocomplete="cc-name" placeholder="Como está no cartão" />
+          </div>
+          <div class="checkout-card-row">
+            <div class="cad-field"><label class="cad-label" for="chk-card-month">Mês</label><input class="cad-input" id="chk-card-month" type="text" inputmode="numeric" maxlength="2" placeholder="MM" /></div>
+            <div class="cad-field"><label class="cad-label" for="chk-card-year">Ano</label><input class="cad-input" id="chk-card-year" type="text" inputmode="numeric" maxlength="2" placeholder="AA" /></div>
+            <div class="cad-field"><label class="cad-label" for="chk-card-cvv">CVV</label><input class="cad-input" id="chk-card-cvv" type="password" inputmode="numeric" maxlength="4" placeholder="000" /></div>
+          </div>
+          <input type="hidden" id="chk-card-installments" value="1" />
+        </div>
+
+        <div class="checkout-pix-panel" id="chk-pix-panel">
+          <p class="checkout-pix-title">Escaneie o QR Code para pagar</p>
+          <div class="checkout-pix-qr"><img src="" alt="QR Code PIX" /></div>
+          <p class="checkout-pix-emv"></p>
+          <button type="button" class="checkout-pix-copy">Copiar código PIX</button>
+          <p class="checkout-pix-status">Aguardando pagamento</p>
+        </div>
+
         <div class="cad-form-footer">
           <div class="cad-loading" id="chk-loading"><div class="cad-spinner"></div><span class="cad-loading-text">Processando seu pedido...</span></div>
           <div class="cad-feedback" id="chk-success">

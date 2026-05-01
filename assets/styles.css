@@ -2183,3 +2183,97 @@ a.entregavel-cta:hover { background: var(--gold); color: var(--dark); border-col
   .checkout-payment-options { grid-template-columns: 1fr; }
 }
 
+/* card fields — only visible when forma_pagamento === 'cartao' */
+.checkout-card-fields {
+  display: none;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.checkout-card-fields.visible { display: flex; }
+
+.checkout-card-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+.checkout-card-row .cad-field { border-bottom: none; border-top: none; border-right: 1px solid var(--border); padding: 0 0.75rem; }
+.checkout-card-row .cad-field:last-child { border-right: none; }
+
+.checkout-installments {
+  margin-top: 0.5rem;
+}
+
+/* PIX block */
+.checkout-pix-panel {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 2rem 1.5rem;
+  border: 1px solid rgba(200,154,46,0.3);
+  background: rgba(200,154,46,0.04);
+  margin-top: 1.5rem;
+  text-align: center;
+}
+.checkout-pix-panel.visible { display: flex; }
+
+.checkout-pix-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+.checkout-pix-qr {
+  width: 200px; height: 200px;
+  background: #fff;
+  padding: 8px;
+  border-radius: 4px;
+}
+.checkout-pix-qr img { width: 100%; height: 100%; display: block; }
+
+.checkout-pix-emv {
+  width: 100%;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  color: var(--muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  word-break: break-all;
+  text-align: left;
+  font-weight: 300;
+}
+
+.checkout-pix-copy {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid rgba(200,154,46,0.4);
+  background: transparent;
+  padding: 10px 22px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.checkout-pix-copy:hover { background: var(--gold); color: var(--dark); }
+.checkout-pix-copy.copied { background: var(--gold); color: var(--dark); }
+
+.checkout-pix-status {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.checkout-pix-status.approved { color: var(--gold-light); }
+.checkout-pix-status::before {
+  content: '○ ';
+  color: var(--muted-2);
+}
+.checkout-pix-status.approved::before {
+  content: '● ';
+  color: var(--gold-light);
+}
+

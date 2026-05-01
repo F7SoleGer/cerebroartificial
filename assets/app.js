@@ -103,29 +103,118 @@
   window.submitCadastro = submitCadastro;
 
   /* ════════════════════════════════════════
-     CHECKOUT (página /checkout/<slug>/)
+     CHECKOUT — dispatcher Hubmais (Zoop wrapper)
+     Fluxo: insere pedido → chama edge function (PIX/cartão) →
+            renderiza QR ou retorna sucesso/erro.
   ════════════════════════════════════════ */
   let _checkoutSubmitting = false;
+  let _pixPollTimer = null;
+
+  function readBuyerFields(form) {
+    return {
+      nome:  form.querySelector('#chk-nome').value.trim(),
+      email: form.querySelector('#chk-email').value.trim(),
+      tel:   form.querySelector('#chk-tel')?.value.trim() ?? '',
+      cpf:   form.querySelector('#chk-cpf')?.value.trim() ?? '',
+    };
+  }
+
+  function readCardFields(form) {
+    const num   = form.querySelector('#chk-card-number')?.value || '';
+    const name  = form.querySelector('#chk-card-name')?.value || '';
+    const month = form.querySelector('#chk-card-month')?.value || '';
+    const year  = form.querySelector('#chk-card-year')?.value || '';
+    const cvv   = form.querySelector('#chk-card-cvv')?.value || '';
+    const inst  = parseInt(form.querySelector('#chk-card-installments')?.value || '1', 10);
+    return {
+      number: num.replace(/\D/g, ''),
+      holder_name: name.trim(),
+      expiration_month: month.padStart(2, '0'),
+      expiration_year: year,
+      security_code: cvv.trim(),
+      installments: Number.isFinite(inst) ? inst : 1,
+    };
+  }
+
+  async function callEdge(name, body) {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':        SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify(body),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+    return json;
+  }
+
+  async function createPedido(form, formaPagamento) {
+    const buyer = readBuyerFields(form);
+    const installmentsEl = form.querySelector('#chk-card-installments');
+    const installments = installmentsEl ? parseInt(installmentsEl.value, 10) : 1;
+
+    const rows = await supabaseInsert('pedidos', {
+      nome:            buyer.nome,
+      email:           buyer.email,
+      telefone:        buyer.tel,
+      cpf:             buyer.cpf.replace(/\D/g, ''),
+      produto_slug:    form.dataset.produtoSlug || '',
+      produto_nome:    form.dataset.produtoNome || '',
+      valor:           parseFloat(form.dataset.produtoValor || '0') || 0,
+      installments:    Number.isFinite(installments) ? installments : 1,
+      forma_pagamento: formaPagamento,
+      origem:          'site_metodo_ca',
+    });
+    const pedido = Array.isArray(rows) ? rows[0] : rows;
+    if (!pedido?.id) throw new Error('Não foi possível registrar o pedido.');
+    return pedido.id;
+  }
+
+  function renderPixPanel(form, { emv, qrcode64 }) {
+    const panel = form.querySelector('#chk-pix-panel');
+    if (!panel) return;
+    const qr = panel.querySelector('.checkout-pix-qr img');
+    const emvEl = panel.querySelector('.checkout-pix-emv');
+    qr.src = qrcode64.startsWith('data:')
+      ? qrcode64
+      : `data:image/svg+xml;base64,${qrcode64}`;
+    emvEl.textContent = emv;
+    panel.classList.add('visible');
+  }
+
+  function startPixPolling(form, pedidoId) {
+    if (_pixPollTimer) clearInterval(_pixPollTimer);
+    const statusEl = form.querySelector('.checkout-pix-status');
+    _pixPollTimer = setInterval(async () => {
+      try {
+        const { status } = await callEdge('check-pix-status', { pedidoId });
+        if (statusEl) statusEl.textContent = status === 'approved' ? 'Pagamento confirmado' : 'Aguardando pagamento';
+        if (status === 'approved') {
+          if (statusEl) statusEl.classList.add('approved');
+          clearInterval(_pixPollTimer); _pixPollTimer = null;
+          form.querySelector('#chk-success')?.classList.add('visible');
+        }
+      } catch (err) {
+        console.warn('[Método CA] check-pix:', err);
+      }
+    }, 5000);
+  }
 
   async function submitCheckout(e) {
     e.preventDefault();
     if (_checkoutSubmitting) return;
-
     const form = e.target;
-    const slug = form.dataset.produtoSlug || '';
-    const nome = form.querySelector('#chk-nome').value.trim();
-    const email = form.querySelector('#chk-email').value.trim();
-    const tel = form.querySelector('#chk-tel').value.trim();
-    const cpfEl = form.querySelector('#chk-cpf');
-    const cpf = cpfEl ? cpfEl.value.trim() : '';
     const pagamentoEl = form.querySelector('input[name="pagamento"]:checked');
-    const pagamento = pagamentoEl ? pagamentoEl.value : '';
+    const formaPagamento = pagamentoEl ? pagamentoEl.value : 'gratuito';
 
-    const btn = form.querySelector('#chk-btn');
+    const btn     = form.querySelector('#chk-btn');
     const loading = form.querySelector('#chk-loading');
     const success = form.querySelector('#chk-success');
-    const errBox = form.querySelector('#chk-error');
-    const errMsg = form.querySelector('#chk-error-msg');
+    const errBox  = form.querySelector('#chk-error');
+    const errMsg  = form.querySelector('#chk-error-msg');
 
     _checkoutSubmitting = true;
     btn.disabled = true;
@@ -134,22 +223,33 @@
     loading.classList.add('visible');
 
     try {
-      await supabaseInsert('pedidos', {
-        nome,
-        email,
-        telefone: tel,
-        cpf,
-        produto_slug: slug,
-        produto_nome: form.dataset.produtoNome || '',
-        valor: form.dataset.produtoValor || '',
-        forma_pagamento: pagamento,
-        origem: 'site_metodo_ca',
-        criado_em: new Date().toISOString(),
-      });
+      const pedidoId = await createPedido(form, formaPagamento);
+
+      if (formaPagamento === 'pix') {
+        const pix = await callEdge('create-pix-payment', { pedidoId });
+        renderPixPanel(form, pix);
+        startPixPolling(form, pedidoId);
+      } else if (formaPagamento === 'cartao') {
+        const card = readCardFields(form);
+        if (card.number.length < 13) throw new Error('Número de cartão inválido.');
+        if (!card.holder_name) throw new Error('Nome impresso no cartão é obrigatório.');
+        if (!card.expiration_month || !card.expiration_year) throw new Error('Validade do cartão é obrigatória.');
+        if (card.security_code.length < 3) throw new Error('CVV inválido.');
+        const result = await callEdge('create-credit-payment', { pedidoId, card });
+        if (result.status === 'succeeded' || result.status === 'authorized') {
+          success.classList.add('visible');
+          form.reset();
+        } else {
+          throw new Error('Cartão recusado pela operadora. Tente outro cartão.');
+        }
+      } else {
+        // gratuito ou boleto — pedido registrado, retorno por e-mail
+        success.classList.add('visible');
+        form.reset();
+      }
 
       loading.classList.remove('visible');
-      success.classList.add('visible');
-      form.reset();
+      btn.disabled = formaPagamento === 'pix';
 
     } catch (err) {
       loading.classList.remove('visible');
@@ -161,6 +261,33 @@
       _checkoutSubmitting = false;
     }
   }
+
+  function setupCheckoutPage() {
+    if (PAGE !== 'checkout') return;
+    const form = document.getElementById('chk-form');
+    if (!form) return;
+
+    // toggle card fields when 'cartao' is selected
+    function toggleCardFields() {
+      const selected = form.querySelector('input[name="pagamento"]:checked');
+      const cardBlock = form.querySelector('#chk-card-fields');
+      if (!cardBlock) return;
+      cardBlock.classList.toggle('visible', !!(selected && selected.value === 'cartao'));
+    }
+    form.querySelectorAll('input[name="pagamento"]').forEach(r => r.addEventListener('change', toggleCardFields));
+    toggleCardFields();
+
+    // PIX copy button
+    const copyBtn = form.querySelector('.checkout-pix-copy');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        const emv = form.querySelector('.checkout-pix-emv')?.textContent || '';
+        if (!emv) return;
+        try { await navigator.clipboard.writeText(emv); copyBtn.classList.add('copied'); copyBtn.textContent = 'Copiado'; setTimeout(() => { copyBtn.classList.remove('copied'); copyBtn.textContent = 'Copiar código PIX'; }, 2000); } catch {}
+      });
+    }
+  }
+  setupCheckoutPage();
 
   window.submitCheckout = submitCheckout;
 

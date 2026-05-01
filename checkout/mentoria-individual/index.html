@@ -89,6 +89,48 @@
           <label class="checkout-payment-option"><input type="radio" name="pagamento" value="boleto" /><span class="checkout-payment-option-label">Boleto</span><span class="checkout-payment-option-hint">à vista</span></label>
         </div>
 
+        <div class="checkout-card-fields" id="chk-card-fields">
+          <div class="cad-field">
+            <label class="cad-label" for="chk-card-number">Número do cartão</label>
+            <input class="cad-input" id="chk-card-number" type="text" inputmode="numeric" maxlength="23" autocomplete="cc-number" placeholder="0000 0000 0000 0000" />
+          </div>
+          <div class="cad-field">
+            <label class="cad-label" for="chk-card-name">Nome impresso no cartão</label>
+            <input class="cad-input" id="chk-card-name" type="text" autocomplete="cc-name" placeholder="Como está no cartão" />
+          </div>
+          <div class="checkout-card-row">
+            <div class="cad-field"><label class="cad-label" for="chk-card-month">Mês</label><input class="cad-input" id="chk-card-month" type="text" inputmode="numeric" maxlength="2" placeholder="MM" /></div>
+            <div class="cad-field"><label class="cad-label" for="chk-card-year">Ano</label><input class="cad-input" id="chk-card-year" type="text" inputmode="numeric" maxlength="2" placeholder="AA" /></div>
+            <div class="cad-field"><label class="cad-label" for="chk-card-cvv">CVV</label><input class="cad-input" id="chk-card-cvv" type="password" inputmode="numeric" maxlength="4" placeholder="000" /></div>
+          </div>
+          <div class="cad-field checkout-installments" style="position:relative;">
+            <label class="cad-label" for="chk-card-installments">Parcelas</label>
+            <select class="cad-select" id="chk-card-installments">
+              <option value="1">1x sem juros</option>
+              <option value="2">2x sem juros</option>
+              <option value="3">3x sem juros</option>
+              <option value="4">4x com juros</option>
+              <option value="5">5x com juros</option>
+              <option value="6">6x com juros</option>
+              <option value="7">7x com juros</option>
+              <option value="8">8x com juros</option>
+              <option value="9">9x com juros</option>
+              <option value="10">10x com juros</option>
+              <option value="11">11x com juros</option>
+              <option value="12">12x com juros</option>
+            </select>
+            <span class="cad-select-arrow"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+        </div>
+
+        <div class="checkout-pix-panel" id="chk-pix-panel">
+          <p class="checkout-pix-title">Escaneie o QR Code para pagar</p>
+          <div class="checkout-pix-qr"><img src="" alt="QR Code PIX" /></div>
+          <p class="checkout-pix-emv"></p>
+          <button type="button" class="checkout-pix-copy">Copiar código PIX</button>
+          <p class="checkout-pix-status">Aguardando pagamento</p>
+        </div>
+
         <div class="cad-form-footer">
           <div class="cad-loading" id="chk-loading"><div class="cad-spinner"></div><span class="cad-loading-text">Enviando aplicação...</span></div>
           <div class="cad-feedback" id="chk-success">

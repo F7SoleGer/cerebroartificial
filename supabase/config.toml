@@ -1,0 +1,10 @@
+project_id = "ynaeybytorspfsdvikzb"
+
+[functions.create-pix-payment]
+verify_jwt = false
+
+[functions.create-credit-payment]
+verify_jwt = false
+
+[functions.check-pix-status]
+verify_jwt = false
