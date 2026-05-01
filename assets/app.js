@@ -2,48 +2,35 @@
   const PAGE = (document.body && document.body.dataset.page) || 'home';
 
   /* ════════════════════════════════════════
-     SUPABASE CONFIG (placeholders trocados no deploy)
+     SUPABASE CONFIG
+     Placeholders abaixo são trocados pelo workflow .github/workflows/deploy.yml.
+     Os valores hard-coded de fallback abaixo são usados em desenvolvimento
+     local — a anon key é pública por design (RLS faz a proteção).
   ════════════════════════════════════════ */
-  const SUPABASE_URL      = '__SUPABASE_URL__';
-  const SUPABASE_ANON_KEY = '__SUPABASE_ANON_KEY__';
+  const _SUPABASE_URL_RAW      = '__SUPABASE_URL__';
+  const _SUPABASE_ANON_KEY_RAW = '__SUPABASE_ANON_KEY__';
+  const SUPABASE_URL = _SUPABASE_URL_RAW.startsWith('__')
+    ? 'https://ynaeybytorspfsdvikzb.supabase.co'
+    : _SUPABASE_URL_RAW;
+  const SUPABASE_ANON_KEY = _SUPABASE_ANON_KEY_RAW.startsWith('__')
+    ? 'sb_publishable_JPCEzZ5qMVUTkFQ5kkHK9A_it5W-kr2'
+    : _SUPABASE_ANON_KEY_RAW;
 
-  if (PAGE === 'cadastro' && (SUPABASE_URL.startsWith('__') || SUPABASE_ANON_KEY.startsWith('__'))) {
-    console.error('[Método CA] Secrets não foram injetados no deploy.');
-  }
-
-  /* Supabase REST helpers (sem SDK — puro fetch) */
-  async function supabaseInsert(table, row) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+  // Edge function caller — toda escrita passa por edge function
+  // (service_role do lado do servidor evita armadilhas de RLS no anon).
+  async function callEdgeFn(name, body) {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
       method: 'POST',
       headers: {
+        'Content-Type':  'application/json',
         'apikey':        SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type':  'application/json',
-        'Prefer':        'return=representation',
       },
-      body: JSON.stringify(row),
+      body: JSON.stringify(body),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || `HTTP ${res.status}`);
-    }
-    return res.json();
-  }
-
-  async function supabaseGetEbook() {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/ebooks?ativo=eq.true&limit=1&select=url_download,titulo`,
-      {
-        headers: {
-          'apikey':        SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-      }
-    );
-    if (!res.ok) throw new Error('Ebook não encontrado');
-    const data = await res.json();
-    if (!data.length) throw new Error('Nenhum ebook ativo cadastrado');
-    return data[0];
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+    return json;
   }
 
   /* ════════════════════════════════════════
@@ -73,16 +60,12 @@
     loading.classList.add('visible');
 
     try {
-      await supabaseInsert('leads', {
+      const ebook = await callEdgeFn('submit-lead', {
         nome,
         telefone: tel,
         email,
         ocupacao: ocup,
-        origem:   'site_metodo_ca',
-        criado_em: new Date().toISOString(),
       });
-
-      const ebook = await supabaseGetEbook();
       window.open(ebook.url_download, '_blank');
 
       loading.classList.remove('visible');
@@ -136,41 +119,26 @@
     };
   }
 
-  async function callEdge(name, body) {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'apikey':        SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-      body: JSON.stringify(body),
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
-    return json;
-  }
+  const callEdge = callEdgeFn;
 
   async function createPedido(form, formaPagamento) {
     const buyer = readBuyerFields(form);
     const installmentsEl = form.querySelector('#chk-card-installments');
     const installments = installmentsEl ? parseInt(installmentsEl.value, 10) : 1;
 
-    const rows = await supabaseInsert('pedidos', {
+    const { pedidoId } = await callEdgeFn('submit-pedido', {
       nome:            buyer.nome,
       email:           buyer.email,
       telefone:        buyer.tel,
-      cpf:             buyer.cpf.replace(/\D/g, ''),
+      cpf:             buyer.cpf,
       produto_slug:    form.dataset.produtoSlug || '',
       produto_nome:    form.dataset.produtoNome || '',
       valor:           parseFloat(form.dataset.produtoValor || '0') || 0,
       installments:    Number.isFinite(installments) ? installments : 1,
       forma_pagamento: formaPagamento,
-      origem:          'site_metodo_ca',
     });
-    const pedido = Array.isArray(rows) ? rows[0] : rows;
-    if (!pedido?.id) throw new Error('Não foi possível registrar o pedido.');
-    return pedido.id;
+    if (!pedidoId) throw new Error('Não foi possível registrar o pedido.');
+    return pedidoId;
   }
 
   function renderPixPanel(form, { emv, qrcode64 }) {

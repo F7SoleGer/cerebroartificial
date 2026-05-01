@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.check-pix-status]
 verify_jwt = false
+
+[functions.submit-lead]
+verify_jwt = false
+
+[functions.submit-pedido]
+verify_jwt = false
