@@ -17,7 +17,8 @@
 6. [Servidor local de preview + página 404](#6-servidor-local-de-preview--página-404)
 7. [`.gitignore`](#7-gitignore)
 8. [E-book gratuito hospedado no Supabase Storage](#8-e-book-gratuito-hospedado-no-supabase-storage)
-9. [Memória persistente do projeto](#9-memória-persistente-do-projeto)
+9. [Inserção de leads e pedidos via edge function](#9-inserção-de-leads-e-pedidos-via-edge-function)
+10. [Memória persistente do projeto](#10-memória-persistente-do-projeto)
 
 ---
 
@@ -198,7 +199,59 @@ mesmo bucket (ou em um path novo) e dar `PATCH` na linha ativa de
 
 ---
 
-## 9. Memória persistente do projeto
+## 9. Inserção de leads e pedidos via edge function
+
+Em testes locais o formulário do `/cadastro/` falhou com
+`"new row violates row-level security policy for table leads"` mesmo
+após criar a policy `for insert to public with check (true)`. Após
+algumas tentativas (recriar policy só para `anon`, alternar entre
+chave anon legada e a `sb_publishable_…`, `set role anon` direto via
+SQL), o sintoma persistiu — o projeto novo da Supabase, que já tem
+publishable/secret keys, não está mapeando o anon JWT para o role
+`anon` de forma confiável (o próprio `pg_has_role('anon','member')`
+retornava false rodando como anon).
+
+Em vez de continuar caçando o detalhe da nova autenticação, o INSERT
+foi movido para edge functions com `service_role`, mesmo padrão das
+funções `create-pix-payment` / `create-credit-payment` que já estavam
+provadamente funcionando.
+
+Mudanças:
+
+- Novas edge functions:
+  - `supabase/functions/submit-lead/index.ts` — recebe
+    `{ nome, email, telefone, ocupacao }`, insere em `public.leads`
+    via service-role e devolve `{ url_download, titulo }` do e-book
+    ativo.
+  - `supabase/functions/submit-pedido/index.ts` — recebe os dados do
+    formulário de checkout, insere em `public.pedidos` via
+    service-role e devolve `{ pedidoId }`.
+- `supabase/config.toml` ganha `verify_jwt=false` para as duas para
+  o frontend estático poder chamá-las só com a publishable key.
+- `assets/app.js` perde `supabaseInsert()` e `supabaseGetEbook()`;
+  ganha um único `callEdgeFn(name, body)`. `submitCadastro` chama
+  `submit-lead`; `createPedido` chama `submit-pedido`. O dispatch
+  PIX/cartão downstream é o mesmo.
+
+Smoke test pós-deploy:
+
+| Function | Resultado |
+|---|---|
+| `submit-lead` | devolve `{url_download, titulo}` apontando para o PDF do Obsidian no Storage |
+| `submit-pedido` | devolve `{pedidoId}` (UUID novo gerado pela tabela) |
+| Form `/cadastro/` no preview | sucesso visual + `window.open()` chamado com a URL real do PDF |
+
+Outro efeito: o frontend continua precisando da chave pública para
+autenticar o gateway, e a chave certa para o projeto novo é a
+**publishable key** (`sb_publishable_…`) — não a anon JWT legada.
+`assets/app.js` agora carrega a publishable key como fallback quando
+os placeholders `__SUPABASE_URL__` / `__SUPABASE_ANON_KEY__` não
+foram substituídos (uso local) e usa o valor injetado pelo workflow
+em produção.
+
+---
+
+## 10. Memória persistente do projeto
 
 O memory file
 `~/.claude/projects/-Users-franklingmendes-Documents-GitHub-cerebroartificial/memory/project_metodo_ca.md`
