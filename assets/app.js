@@ -111,6 +111,7 @@
     metodo:      '/metodo/',
     ferramentas: '/ferramentas/',
     aplicacoes:  '/aplicacoes/',
+    produtos:    '/produtos/',
     cadastro:    '/cadastro/',
   };
   window.goTo = function (pageId) {
