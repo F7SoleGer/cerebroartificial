@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Conteúdo Gratuito + E-book — Método C.A</title>
+<meta name="description" content="Acesso gratuito ao conteúdo introdutório e ao e-book do Método C.A.">
+<link rel="canonical" href="https://ca.franklingmendes.com/checkout/conteudo-gratuito/">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body data-page="checkout">
+
+<canvas id="graph-canvas" aria-hidden="true"></canvas>
+
+<nav>
+  <a class="nav-logo" href="/">Método <em>C.A</em></a>
+  <ul class="nav-links">
+    <li><a href="/"             id="nav-home">Home</a></li>
+    <li><a href="/conceito/"    id="nav-conceito">Conceito</a></li>
+    <li><a href="/metodo/"      id="nav-metodo">Método</a></li>
+    <li><a href="/ferramentas/" id="nav-ferramentas">Ferramentas</a></li>
+    <li><a href="/aplicacoes/"  id="nav-aplicacoes">Aplicações</a></li>
+    <li><a href="/produtos/"    id="nav-produtos">Produtos</a></li>
+  </ul>
+</nav>
+
+<div class="page" id="page-checkout">
+  <div class="checkout-wrap">
+
+    <aside class="checkout-summary">
+      <p class="checkout-eyebrow">Checkout — Acesso gratuito</p>
+      <p class="checkout-product-num">Produto 01</p>
+      <h2 class="checkout-product-name">Conteúdo Gratuito<br>+ <em>E-book</em></h2>
+      <p class="checkout-product-tagline">
+        O ponto de entrada no universo do Método C.A. Conteúdo regular
+        nas redes e um e-book introdutório enviado direto no seu e-mail.
+      </p>
+
+      <div class="checkout-deliverables">
+        <p class="checkout-deliverables-title">O que você recebe</p>
+        <p class="checkout-deliverable">Posts semanais nas redes sociais</p>
+        <p class="checkout-deliverable">Vídeos curtos no YouTube e Reels</p>
+        <p class="checkout-deliverable">Newsletter quinzenal</p>
+        <p class="checkout-deliverable">PDF de 20 a 30 páginas — e-book introdutório</p>
+      </div>
+
+      <div class="checkout-total">
+        <span class="checkout-total-label">Total</span>
+        <span class="checkout-total-value">Grátis</span>
+      </div>
+    </aside>
+
+    <section class="checkout-form-side">
+      <p class="checkout-form-label">Dados para acesso</p>
+
+      <form class="cad-form" id="chk-form"
+            data-produto-slug="conteudo-gratuito"
+            data-produto-nome="Conteúdo Gratuito + E-book"
+            data-produto-valor="0"
+            onsubmit="submitCheckout(event)">
+
+        <div class="cad-field">
+          <label class="cad-label" for="chk-nome">Nome completo</label>
+          <input class="cad-input" id="chk-nome" type="text" placeholder="Seu nome" autocomplete="name" required />
+        </div>
+
+        <div class="cad-field">
+          <label class="cad-label" for="chk-email">E-mail</label>
+          <input class="cad-input" id="chk-email" type="email" placeholder="seu@email.com" autocomplete="email" required />
+        </div>
+
+        <div class="cad-field">
+          <label class="cad-label" for="chk-tel">Telefone</label>
+          <input class="cad-input" id="chk-tel" type="tel" placeholder="+55 (00) 00000-0000" autocomplete="tel" required />
+        </div>
+
+        <div class="cad-form-footer">
+          <div class="cad-loading" id="chk-loading"><div class="cad-spinner"></div><span class="cad-loading-text">Liberando seu acesso...</span></div>
+          <div class="cad-feedback" id="chk-success">
+            <div class="cad-feedback-icon success"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l4 4 6-7" stroke="rgba(80,180,160,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div><div class="cad-feedback-title">Acesso liberado</div><div class="cad-feedback-body">O e-book introdutório foi enviado para o seu e-mail. Bem-vindo ao Método C.A.</div></div>
+          </div>
+          <div class="cad-feedback" id="chk-error">
+            <div class="cad-feedback-icon error"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 4v5M8 11v1" stroke="rgba(220,80,80,0.9)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div><div class="cad-feedback-title">Erro ao registrar</div><div class="cad-feedback-body" id="chk-error-msg">Tente novamente em instantes.</div></div>
+          </div>
+          <button class="cad-submit" id="chk-btn" type="submit">
+            Receber acesso
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <p class="cad-legal">Ao prosseguir, você concorda com o uso dos seus dados para o envio do material. Nenhuma informação é compartilhada com terceiros.</p>
+        </div>
+      </form>
+    </section>
+
+  </div>
+</div>
+
+<script src="/assets/app.js"></script>
+</body>
+</html>

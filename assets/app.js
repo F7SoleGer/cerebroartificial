@@ -103,6 +103,68 @@
   window.submitCadastro = submitCadastro;
 
   /* ════════════════════════════════════════
+     CHECKOUT (página /checkout/<slug>/)
+  ════════════════════════════════════════ */
+  let _checkoutSubmitting = false;
+
+  async function submitCheckout(e) {
+    e.preventDefault();
+    if (_checkoutSubmitting) return;
+
+    const form = e.target;
+    const slug = form.dataset.produtoSlug || '';
+    const nome = form.querySelector('#chk-nome').value.trim();
+    const email = form.querySelector('#chk-email').value.trim();
+    const tel = form.querySelector('#chk-tel').value.trim();
+    const cpfEl = form.querySelector('#chk-cpf');
+    const cpf = cpfEl ? cpfEl.value.trim() : '';
+    const pagamentoEl = form.querySelector('input[name="pagamento"]:checked');
+    const pagamento = pagamentoEl ? pagamentoEl.value : '';
+
+    const btn = form.querySelector('#chk-btn');
+    const loading = form.querySelector('#chk-loading');
+    const success = form.querySelector('#chk-success');
+    const errBox = form.querySelector('#chk-error');
+    const errMsg = form.querySelector('#chk-error-msg');
+
+    _checkoutSubmitting = true;
+    btn.disabled = true;
+    success.classList.remove('visible');
+    errBox.classList.remove('visible');
+    loading.classList.add('visible');
+
+    try {
+      await supabaseInsert('pedidos', {
+        nome,
+        email,
+        telefone: tel,
+        cpf,
+        produto_slug: slug,
+        produto_nome: form.dataset.produtoNome || '',
+        valor: form.dataset.produtoValor || '',
+        forma_pagamento: pagamento,
+        origem: 'site_metodo_ca',
+        criado_em: new Date().toISOString(),
+      });
+
+      loading.classList.remove('visible');
+      success.classList.add('visible');
+      form.reset();
+
+    } catch (err) {
+      loading.classList.remove('visible');
+      errMsg.textContent = err.message || 'Erro inesperado. Tente novamente.';
+      errBox.classList.add('visible');
+      btn.disabled = false;
+      console.error('[Método CA] Erro no checkout:', err);
+    } finally {
+      _checkoutSubmitting = false;
+    }
+  }
+
+  window.submitCheckout = submitCheckout;
+
+  /* ════════════════════════════════════════
      NAVEGAÇÃO (URL real)
   ════════════════════════════════════════ */
   const PAGE_URLS = {

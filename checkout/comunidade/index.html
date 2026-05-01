@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Comunidade — Método C.A</title>
+<meta name="description" content="Acesso à Comunidade do Método C.A — assinatura mensal com lives, Q&A e biblioteca.">
+<link rel="canonical" href="https://ca.franklingmendes.com/checkout/comunidade/">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body data-page="checkout">
+
+<canvas id="graph-canvas" aria-hidden="true"></canvas>
+
+<nav>
+  <a class="nav-logo" href="/">Método <em>C.A</em></a>
+  <ul class="nav-links">
+    <li><a href="/"             id="nav-home">Home</a></li>
+    <li><a href="/conceito/"    id="nav-conceito">Conceito</a></li>
+    <li><a href="/metodo/"      id="nav-metodo">Método</a></li>
+    <li><a href="/ferramentas/" id="nav-ferramentas">Ferramentas</a></li>
+    <li><a href="/aplicacoes/"  id="nav-aplicacoes">Aplicações</a></li>
+    <li><a href="/produtos/"    id="nav-produtos">Produtos</a></li>
+  </ul>
+</nav>
+
+<div class="page" id="page-checkout">
+  <div class="checkout-wrap">
+
+    <aside class="checkout-summary">
+      <p class="checkout-eyebrow">Checkout — Recorrência mensal</p>
+      <p class="checkout-product-num">Produto 03</p>
+      <h2 class="checkout-product-name">Comunidade <em>C.A</em></h2>
+      <p class="checkout-product-tagline">
+        O ambiente onde quem aplica o Método troca prática, dúvidas e
+        descobertas. Lives mensais, Q&amp;A semanais e biblioteca curada.
+      </p>
+
+      <div class="checkout-deliverables">
+        <p class="checkout-deliverables-title">O que você recebe</p>
+        <p class="checkout-deliverable">Grupo exclusivo (Discord ou Circle)</p>
+        <p class="checkout-deliverable">Lives mensais ao vivo</p>
+        <p class="checkout-deliverable">Sessões de Q&amp;A semanais</p>
+        <p class="checkout-deliverable">Biblioteca de materiais</p>
+        <p class="checkout-deliverable">Networking com membros</p>
+        <p class="checkout-deliverable">Desafios e trilhas mensais</p>
+      </div>
+
+      <div class="checkout-total">
+        <span class="checkout-total-label">Mensalidade</span>
+        <span class="checkout-total-value">R$ 197,00<span class="checkout-total-recurrence">/ mês</span></span>
+      </div>
+    </aside>
+
+    <section class="checkout-form-side">
+      <p class="checkout-form-label">Dados de assinatura</p>
+
+      <form class="cad-form" id="chk-form"
+            data-produto-slug="comunidade"
+            data-produto-nome="Comunidade C.A"
+            data-produto-valor="197.00"
+            onsubmit="submitCheckout(event)">
+
+        <div class="cad-field">
+          <label class="cad-label" for="chk-nome">Nome completo</label>
+          <input class="cad-input" id="chk-nome" type="text" placeholder="Seu nome" autocomplete="name" required />
+        </div>
+
+        <div class="cad-field">
+          <label class="cad-label" for="chk-email">E-mail</label>
+          <input class="cad-input" id="chk-email" type="email" placeholder="seu@email.com" autocomplete="email" required />
+        </div>
+
+        <div class="cad-field">
+          <label class="cad-label" for="chk-tel">Telefone</label>
+          <input class="cad-input" id="chk-tel" type="tel" placeholder="+55 (00) 00000-0000" autocomplete="tel" required />
+        </div>
+
+        <div class="cad-field">
+          <label class="cad-label" for="chk-cpf">CPF</label>
+          <input class="cad-input" id="chk-cpf" type="text" placeholder="000.000.000-00" inputmode="numeric" required />
+        </div>
+
+        <div class="checkout-payment-options">
+          <label class="checkout-payment-option"><input type="radio" name="pagamento" value="cartao" checked /><span class="checkout-payment-option-label">Cartão</span><span class="checkout-payment-option-hint">recorrente</span></label>
+          <label class="checkout-payment-option"><input type="radio" name="pagamento" value="pix" /><span class="checkout-payment-option-label">Pix</span><span class="checkout-payment-option-hint">renovação manual</span></label>
+        </div>
+
+        <div class="cad-form-footer">
+          <div class="cad-loading" id="chk-loading"><div class="cad-spinner"></div><span class="cad-loading-text">Processando assinatura...</span></div>
+          <div class="cad-feedback" id="chk-success">
+            <div class="cad-feedback-icon success"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8l4 4 6-7" stroke="rgba(80,180,160,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div><div class="cad-feedback-title">Assinatura registrada</div><div class="cad-feedback-body">Você receberá em instantes as instruções de pagamento e o convite para a Comunidade.</div></div>
+          </div>
+          <div class="cad-feedback" id="chk-error">
+            <div class="cad-feedback-icon error"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 4v5M8 11v1" stroke="rgba(220,80,80,0.9)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div><div class="cad-feedback-title">Erro ao processar</div><div class="cad-feedback-body" id="chk-error-msg">Tente novamente em instantes.</div></div>
+          </div>
+          <button class="cad-submit" id="chk-btn" type="submit">
+            Assinar agora
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <p class="cad-legal">Cobrança recorrente mensal. Você pode cancelar a qualquer momento — sem multa, sem fidelidade.</p>
+        </div>
+      </form>
+    </section>
+
+  </div>
+</div>
+
+<script src="/assets/app.js"></script>
+</body>
+</html>
