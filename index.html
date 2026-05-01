@@ -1659,7 +1659,7 @@ nav {
 <body>
 
 <!-- GLOBAL GRAPH CANVAS -->
-<canvas id="graph-canvas"></canvas>
+<canvas id="graph-canvas" aria-hidden="true"></canvas>
 
 <!-- NAV -->
 <nav>
@@ -2843,6 +2843,14 @@ async function submitCadastro(e) {
 /* ════════════════════════════════════════
    ROUTER
 ════════════════════════════════════════ */
+const _pageConfigs = {
+  conceito:    { scrollId: 'conceito-scroll', blockSel: '.concept-block', ctaSel: '.conceito-cta',    itemSel: '.prog-item', dataAttr: 'block', threshold: 0.25 },
+  metodo:      { scrollId: 'metodo-scroll',   blockSel: '.phase-block',   ctaSel: '.metodo-cta',      itemSel: '.mt-item',   dataAttr: 'phase', threshold: 0.2  },
+  ferramentas: { scrollId: 'ferr-scroll',     blockSel: '.ferr-block',    ctaSel: '.ferr-cta',        itemSel: '.fi-item',   dataAttr: 'ferr',  threshold: 0.2  },
+  aplicacoes:  { scrollId: 'aplic-scroll',    blockSel: '.aplic-block',   ctaSel: '.aplic-cta-final', itemSel: '.ai-item',   dataAttr: 'aplic', threshold: 0.2  },
+};
+const _observers = {};
+
 function goTo(pageId) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
@@ -2850,147 +2858,52 @@ function goTo(pageId) {
   const link = document.getElementById('nav-' + pageId);
   if (page) page.classList.add('active');
   if (link) link.classList.add('active');
-  if (pageId === 'conceito') initConceitoObserver();
-  if (pageId === 'metodo')   initMetodoObserver();
-  if (pageId === 'ferramentas') initFerrObserver();
-  if (pageId === 'aplicacoes')  initAplicObserver();
+  if (_pageConfigs[pageId]) initPageObserver(_pageConfigs[pageId]);
 }
 
 /* set home active on load */
 document.getElementById('page-home').classList.add('active');
 
 /* ════════════════════════════════════════
-   CONCEITO — scroll observer
+   SCROLL OBSERVER — generic factory
 ════════════════════════════════════════ */
-function initConceitoObserver() {
-  const scroller = document.getElementById('conceito-scroll');
-  const blocks   = document.querySelectorAll('.concept-block');
-  const cta      = document.querySelector('.conceito-cta');
-  const items    = document.querySelectorAll('.prog-item');
+function initPageObserver({ scrollId, blockSel, ctaSel, itemSel, dataAttr, threshold }) {
+  if (_observers[scrollId]) _observers[scrollId].disconnect();
+
+  const scroller = document.getElementById(scrollId);
+  const blocks   = document.querySelectorAll(blockSel);
+  const cta      = ctaSel ? document.querySelector(ctaSel) : null;
+  const items    = document.querySelectorAll(itemSel);
 
   const io = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('visible');
-        const idx = entry.target.dataset.block;
+        const idx = entry.target.dataset[dataAttr];
         if (idx !== undefined) {
           items.forEach(i => i.classList.remove('active'));
           if (items[idx]) items[idx].classList.add('active');
         }
       }
     });
-  }, { root: scroller, threshold: 0.25 });
+  }, { root: scroller, threshold });
 
   blocks.forEach(b => io.observe(b));
   if (cta) io.observe(cta);
+  _observers[scrollId] = io;
 }
 
-function scrollToBlock(idx) {
-  const block = document.querySelector('[data-block="' + parseInt(idx, 10) + '"]');
-  const scroller = document.getElementById('conceito-scroll');
-  if (block && scroller) {
-    scroller.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
-  }
+function scrollToSection(scrollId, dataAttr, idx) {
+  const n      = parseInt(idx, 10);
+  const block  = document.querySelector('[data-' + dataAttr + '="' + n + '"]');
+  const scroll = document.getElementById(scrollId);
+  if (block && scroll) scroll.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
 }
 
-/* ════════════════════════════════════════
-   MÉTODO — scroll observer
-════════════════════════════════════════ */
-function initMetodoObserver() {
-  const scroller = document.getElementById('metodo-scroll');
-  const phases   = document.querySelectorAll('.phase-block');
-  const cta      = document.querySelector('.metodo-cta');
-  const items    = document.querySelectorAll('.mt-item');
-
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        const idx = entry.target.dataset.phase;
-        if (idx !== undefined) {
-          items.forEach(i => i.classList.remove('active'));
-          if (items[idx]) items[idx].classList.add('active');
-        }
-      }
-    });
-  }, { root: scroller, threshold: 0.2 });
-
-  phases.forEach(b => io.observe(b));
-  if (cta) io.observe(cta);
-}
-
-function scrollToPhase(idx) {
-  const block    = document.querySelector('[data-phase="' + parseInt(idx, 10) + '"]');
-  const scroller = document.getElementById('metodo-scroll');
-  if (block && scroller) {
-    scroller.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
-  }
-}
-
-
-/* ════════════════════════════════════════
-   FERRAMENTAS — scroll observer
-════════════════════════════════════════ */
-function initFerrObserver() {
-  const scroller = document.getElementById('ferr-scroll');
-  const blocks   = document.querySelectorAll('.ferr-block');
-  const cta      = document.querySelector('.ferr-cta');
-  const items    = document.querySelectorAll('.fi-item');
-
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        const idx = entry.target.dataset.ferr;
-        if (idx !== undefined) {
-          items.forEach(i => i.classList.remove('active'));
-          if (items[idx]) items[idx].classList.add('active');
-        }
-      }
-    });
-  }, { root: scroller, threshold: 0.2 });
-
-  blocks.forEach(b => io.observe(b));
-  if (cta) io.observe(cta);
-}
-
-function scrollToFerr(idx) {
-  const block    = document.querySelector('[data-ferr="' + parseInt(idx, 10) + '"]');
-  const scroller = document.getElementById('ferr-scroll');
-  if (block && scroller) scroller.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
-}
-
-/* ════════════════════════════════════════
-   APLICAÇÕES — scroll observer
-════════════════════════════════════════ */
-function initAplicObserver() {
-  const scroller = document.getElementById('aplic-scroll');
-  const blocks   = document.querySelectorAll('.aplic-block');
-  const cta      = document.querySelector('.aplic-cta-final');
-  const items    = document.querySelectorAll('.ai-item');
-
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        const idx = entry.target.dataset.aplic;
-        if (idx !== undefined) {
-          items.forEach(i => i.classList.remove('active'));
-          if (items[idx]) items[idx].classList.add('active');
-        }
-      }
-    });
-  }, { root: scroller, threshold: 0.2 });
-
-  blocks.forEach(b => io.observe(b));
-  if (cta) io.observe(cta);
-}
-
-function scrollToAplic(idx) {
-  const block    = document.querySelector('[data-aplic="' + parseInt(idx, 10) + '"]');
-  const scroller = document.getElementById('aplic-scroll');
-  if (block && scroller) scroller.scrollTo({ top: block.offsetTop - 80, behavior: 'smooth' });
-}
+function scrollToBlock(idx) { scrollToSection('conceito-scroll', 'block', idx); }
+function scrollToPhase(idx) { scrollToSection('metodo-scroll',   'phase', idx); }
+function scrollToFerr(idx)  { scrollToSection('ferr-scroll',     'ferr',  idx); }
+function scrollToAplic(idx) { scrollToSection('aplic-scroll',    'aplic', idx); }
 
 /* ════════════════════════════════════════
    GLOBAL GRAPH CANVAS
@@ -3005,53 +2918,90 @@ function scrollToAplic(idx) {
   const B = 'rgba(80,140,220,';
   const M = 'rgba(160,155,140,';
 
+  /* Node index map — edit DEFS and LINKS together */
+  const N = {
+    SC:  0,  /* Segundo Cérebro */
+    MC:  1,  /* Método C.A      */
+    INT: 2,  /* Inteligência    */
+    CON: 3,  /* Conhecimento    */
+    ZK:  4,  /* Zettelkasten    */
+    CAP: 5,  /* Capturar        */
+    ORG: 6,  /* Organizar       */
+    AMP: 7,  /* Amplificar      */
+    DOT: 8,  /* Doutrina        */
+    EST: 9,  /* Estratégia      */
+    SIN: 10, /* Síntese         */
+    ARQ: 11, /* Arquivo         */
+    CNX: 12, /* Conexões        */
+    GRF: 13, /* Grafo           */
+    LEI: 14, /* Leitura         */
+    MEM: 15, /* Memória         */
+    PRD: 16, /* Produção        */
+    CTX: 17, /* Contexto        */
+    NOT: 18, /* Notas           */
+    TAG: 19, /* Tags            */
+    PES: 20, /* Pesquisa        */
+    REF: 21, /* Referências     */
+    ANL: 22, /* Análise         */
+    REV: 23, /* Revisão         */
+    PRM: 24, /* Prompts         */
+    INS: 25, /* Insights        */
+    DEC: 26, /* Decisão         */
+    IDE: 27, /* Ideia           */
+    ARG: 28, /* Argumento       */
+    PAD: 29, /* Padrão          */
+  };
+
   const DEFS = [
-    { label: 'Segundo Cérebro', c: G, r: 12, hub: true },
-    { label: 'Método C.A',      c: G, r: 10, hub: true },
-    { label: 'Inteligência',    c: B, r: 10, hub: true },
-    { label: 'Conhecimento',    c: T, r: 7  },
-    { label: 'Zettelkasten',    c: T, r: 6  },
-    { label: 'Capturar',        c: M, r: 5  },
-    { label: 'Organizar',       c: M, r: 5  },
-    { label: 'Amplificar',      c: M, r: 5  },
-    { label: 'Doutrina',        c: G, r: 7  },
-    { label: 'Estratégia',      c: G, r: 6  },
-    { label: 'Síntese',         c: B, r: 6  },
-    { label: 'Arquivo',         c: P, r: 6  },
-    { label: 'Conexões',        c: P, r: 5  },
-    { label: 'Grafo',           c: P, r: 5  },
-    { label: 'Leitura',         c: T, r: 5  },
-    { label: 'Memória',         c: T, r: 5  },
-    { label: 'Produção',        c: T, r: 5  },
-    { label: 'Contexto',        c: M, r: 4  },
-    { label: 'Notas',           c: M, r: 4  },
-    { label: 'Tags',            c: M, r: 4  },
-    { label: 'Pesquisa',        c: M, r: 4  },
-    { label: 'Referências',     c: M, r: 4  },
-    { label: 'Análise',         c: B, r: 5  },
-    { label: 'Revisão',         c: P, r: 4  },
-    { label: 'Prompts',         c: B, r: 5  },
-    { label: 'Insights',        c: T, r: 6  },
-    { label: 'Decisão',         c: M, r: 4  },
-    { label: 'Ideia',           c: G, r: 5  },
-    { label: 'Argumento',       c: G, r: 4  },
-    { label: 'Padrão',          c: T, r: 5  },
+    { label: 'Segundo Cérebro', c: G, r: 12, hub: true }, /* N.SC  */
+    { label: 'Método C.A',      c: G, r: 10, hub: true }, /* N.MC  */
+    { label: 'Inteligência',    c: B, r: 10, hub: true }, /* N.INT */
+    { label: 'Conhecimento',    c: T, r: 7  },             /* N.CON */
+    { label: 'Zettelkasten',    c: T, r: 6  },             /* N.ZK  */
+    { label: 'Capturar',        c: M, r: 5  },             /* N.CAP */
+    { label: 'Organizar',       c: M, r: 5  },             /* N.ORG */
+    { label: 'Amplificar',      c: M, r: 5  },             /* N.AMP */
+    { label: 'Doutrina',        c: G, r: 7  },             /* N.DOT */
+    { label: 'Estratégia',      c: G, r: 6  },             /* N.EST */
+    { label: 'Síntese',         c: B, r: 6  },             /* N.SIN */
+    { label: 'Arquivo',         c: P, r: 6  },             /* N.ARQ */
+    { label: 'Conexões',        c: P, r: 5  },             /* N.CNX */
+    { label: 'Grafo',           c: P, r: 5  },             /* N.GRF */
+    { label: 'Leitura',         c: T, r: 5  },             /* N.LEI */
+    { label: 'Memória',         c: T, r: 5  },             /* N.MEM */
+    { label: 'Produção',        c: T, r: 5  },             /* N.PRD */
+    { label: 'Contexto',        c: M, r: 4  },             /* N.CTX */
+    { label: 'Notas',           c: M, r: 4  },             /* N.NOT */
+    { label: 'Tags',            c: M, r: 4  },             /* N.TAG */
+    { label: 'Pesquisa',        c: M, r: 4  },             /* N.PES */
+    { label: 'Referências',     c: M, r: 4  },             /* N.REF */
+    { label: 'Análise',         c: B, r: 5  },             /* N.ANL */
+    { label: 'Revisão',         c: P, r: 4  },             /* N.REV */
+    { label: 'Prompts',         c: B, r: 5  },             /* N.PRM */
+    { label: 'Insights',        c: T, r: 6  },             /* N.INS */
+    { label: 'Decisão',         c: M, r: 4  },             /* N.DEC */
+    { label: 'Ideia',           c: G, r: 5  },             /* N.IDE */
+    { label: 'Argumento',       c: G, r: 4  },             /* N.ARG */
+    { label: 'Padrão',          c: T, r: 5  },             /* N.PAD */
   ];
 
+  const { SC,MC,INT,CON,ZK,CAP,ORG,AMP,DOT,EST,SIN,ARQ,CNX,GRF,
+          LEI,MEM,PRD,CTX,NOT,TAG,PES,REF,ANL,REV,PRM,INS,DEC,IDE,ARG,PAD } = N;
+
   const LINKS = [
-    [0,1],[0,2],[0,3],[0,8],[0,14],[0,15],[0,16],[0,25],[0,29],
-    [1,11],[1,12],[1,13],[1,5],[1,6],[1,7],[1,23],[1,18],[1,19],[1,20],[1,21],
-    [2,10],[2,22],[2,24],[2,3],
-    [3,4],[3,14],[3,25],
-    [8,9],[8,27],[8,28],
-    [10,22],[10,1],
-    [11,12],[11,13],[11,18],
-    [4,18],[4,19],
-    [14,15],[15,16],[16,27],
-    [25,29],[25,16],[25,14],
-    [22,24],[24,10],
-    [17,1],[17,0],
-    [26,0],[26,3],
+    [SC,MC],[SC,INT],[SC,CON],[SC,DOT],[SC,LEI],[SC,MEM],[SC,PRD],[SC,INS],[SC,PAD],
+    [MC,ARQ],[MC,CNX],[MC,GRF],[MC,CAP],[MC,ORG],[MC,AMP],[MC,REV],[MC,NOT],[MC,TAG],[MC,PES],[MC,REF],
+    [INT,SIN],[INT,ANL],[INT,PRM],[INT,CON],
+    [CON,ZK],[CON,LEI],[CON,INS],
+    [DOT,EST],[DOT,IDE],[DOT,ARG],
+    [SIN,ANL],[SIN,MC],
+    [ARQ,CNX],[ARQ,GRF],[ARQ,NOT],
+    [ZK,NOT],[ZK,TAG],
+    [LEI,MEM],[MEM,PRD],[PRD,IDE],
+    [INS,PAD],[INS,PRD],[INS,LEI],
+    [ANL,PRM],[PRM,SIN],
+    [CTX,MC],[CTX,SC],
+    [DEC,SC],[DEC,CON],
   ];
 
   let W, H, nodes = [];
@@ -3084,14 +3034,21 @@ function scrollToAplic(idx) {
   }
 
   let ai = 0;
-  setInterval(() => {
-    if (nodes[ai]) nodes[ai].glow = false;
-    ai = Math.floor(Math.random() * nodes.length);
-    if (nodes[ai]) { nodes[ai].glow = true; nodes[ai].pulse = 1; }
-  }, 1400);
+  let glowAccum = 0;
 
   let t = 0;
-  function tick() {
+  function tick(now) {
+    const dt = now - (tick._last || now);
+    tick._last = now;
+
+    glowAccum += dt;
+    if (glowAccum >= 1400) {
+      glowAccum = 0;
+      if (nodes[ai]) nodes[ai].glow = false;
+      ai = Math.floor(Math.random() * nodes.length);
+      if (nodes[ai]) { nodes[ai].glow = true; nodes[ai].pulse = 1; }
+    }
+
     ctx.clearRect(0, 0, W, H);
     t += 0.008;
 
