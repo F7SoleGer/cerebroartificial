@@ -93,7 +93,7 @@ export async function createPixTransaction(
     payment_type: "pix",
     description: args.description,
   };
-  if (args.buyerId) body.on_behalf_of = c.sellerId, (body.buyer = { id: args.buyerId });
+  if (args.buyerId) body.buyer = { id: args.buyerId };
 
   const resp = await fetch(url, {
     method: "POST",
@@ -103,11 +103,12 @@ export async function createPixTransaction(
   const json = await resp.json();
   if (!resp.ok) throw new Error(`hubmais pix: ${json.message ?? resp.status}`);
 
-  const pix = json.payment_method ?? {};
+  // Hubmais retorna { id, pix: { qrcode, qrcode64, ... } }
+  const pix = json.pix ?? json.payment_method ?? {};
   return {
     transactionId: json.id ?? json.uid,
-    emv: pix.qr_code?.emv ?? pix.emv ?? "",
-    qrcode64: pix.qr_code?.image ?? pix.qrcode64 ?? "",
+    emv: pix.qrcode ?? pix.emv ?? pix.qr_code?.emv ?? "",
+    qrcode64: pix.qrcode64 ?? pix.qr_code?.image ?? "",
   };
 }
 
