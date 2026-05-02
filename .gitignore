@@ -1,5 +1,6 @@
-# local state — never commit
-.claude/
+# local state — never commit (mas .claude/skills/ é versionado)
+.claude/*
+!.claude/skills/
 .DS_Store
 node_modules/
 

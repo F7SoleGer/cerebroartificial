@@ -19,6 +19,9 @@
 8. [E-book gratuito hospedado no Supabase Storage](#8-e-book-gratuito-hospedado-no-supabase-storage)
 9. [Inserção de leads e pedidos via edge function](#9-inserção-de-leads-e-pedidos-via-edge-function)
 10. [Memória persistente do projeto](#10-memória-persistente-do-projeto)
+11. [Domínio franklingmendes.com e pipeline HostGator](#11-domínio-franklingmendescom-e-pipeline-hostgator)
+12. [Responsividade mobile-first](#12-responsividade-mobile-first)
+13. [Skill `registrar-deploy`](#13-skill-registrar-deploy)
 
 ---
 
@@ -265,3 +268,100 @@ foi atualizado para refletir:
 
 O índice `MEMORY.md` continua compacto, apontando para
 `project_metodo_ca.md` e `feedback_code_style.md`.
+
+---
+
+## 11. Domínio franklingmendes.com e pipeline HostGator
+
+Migração do hosting de GitHub Pages (`ca.franklingmendes.com`) para
+o domínio raiz **`franklingmendes.com`** servido pela HostGator. Os
+dois alvos de deploy ficaram coexistindo: `.github/workflows/deploy.yml`
+continua publicando em Pages; `.github/workflows/deploy-hostgator.yml`
+publica via cPanel. Mudanças aplicadas:
+
+- `CNAME` e todos os `<link rel="canonical">` (14 arquivos HTML)
+  trocados de `ca.franklingmendes.com` → `franklingmendes.com`.
+- Novo workflow `deploy-hostgator.yml`: injeta secrets em
+  `assets/app.js`, deploya as 5 edge functions Supabase
+  (`submit-lead`, `submit-pedido`, `create-pix-payment`,
+  `create-credit-payment`, `check-pix-status`) e sobe os arquivos
+  estáticos via cPanel API. O passo do Supabase fica em
+  `continue-on-error` para não bloquear o upload se o token estiver
+  malformado, e o passo do upload usa `bash scripts/cpanel-deploy.sh`.
+- Novo `scripts/cpanel-deploy.sh`: atravessa a árvore do site,
+  garante diretórios remotos com `Fileman/mkdir`, sobe arquivos com
+  `Fileman/upload_files` passando `overwrite=1` (correção da rejeição
+  "O arquivo já existe"). Sanitiza `CPANEL_HOST` (remove `https://`,
+  porta e barras extras) e `CPANEL_DEPLOY_DIR` (remove barras de
+  início/fim). Sai com erro se alguma secret estiver vazia.
+- Novo `.htaccess` na raiz do repositório, enviado pelo deploy:
+  `DirectoryIndex index.html`, redirect com barra final em
+  diretórios, `ErrorDocument 404 /404.html`, cache moderado por tipo
+  e `mod_deflate` para texto.
+- Novo [`DEPLOY.md`](DEPLOY.md) documenta os 7 secrets, o pipeline,
+  a estrutura no servidor, troubleshooting e o fallback de deploy
+  manual a partir do laptop.
+
+Erros encontrados no caminho até o primeiro deploy verde
+([run 25234346649](https://github.com/F7SoleGer/cerebroartificial/actions/runs/25234346649)):
+
+| Sintoma | Causa | Correção |
+|---|---|---|
+| `Invalid access token format. Must be like sbp_…` | secret `SUPABASE_ACCESS_TOKEN` no formato errado | passo do Supabase virou `continue-on-error` + early-exit com warning quando o token não bate em `sbp_*` |
+| `curl: (6) Could not resolve host: https` | secret `CPANEL_HOST` salva com `https://` na frente | sanitização inline no `cpanel-deploy.sh` |
+| `O arquivo "index.html" para carregamento já existe` | `Fileman/upload_files` recusa overwrite por padrão | adicionado `-F overwrite=1` |
+| `406 Not Acceptable` ao validar com `curl` | ModSecurity da HostGator bloqueia `User-Agent: Mozilla/5.0` curto | usar UA realista nos health checks (script já documenta) |
+
+Endpoints validados em produção após o deploy verde:
+`https://franklingmendes.com/` 200, `/produtos/` 200,
+`/checkout/curso-online/` 200, `/assets/styles.css` 200 (61 143 b
+com cache `public, max-age=86400`).
+
+---
+
+## 12. Responsividade mobile-first
+
+`assets/styles.css` ganhou três breakpoints adicionais que refinam,
+em camadas, o layout para telas menores que 860 px (que já existia).
+A abordagem é mobile-first incremental — cada breakpoint só ajusta
+o que precisa para a faixa em questão.
+
+| Breakpoint | Foco principal |
+|---|---|
+| `≤ 720 px` | Nav vira scroll horizontal sem barra (todos os 7 itens acessíveis), paddings reduzidos nos wraps de seção, escada de produtos com chart menor, campos do cartão (`MM` / `AA` / `CVV`) em coluna única |
+| `≤ 540 px` | Hero clamp(2.6rem, 12vw, 4.2rem); CTAs viram `width: 100%`; cards de entregáveis em uma coluna; listas (specs, practices, stats) em uma coluna; touch targets mínimos de 44 px em botões e links de ação |
+| `≤ 420 px` | Paddings ainda menores para iPhone SE (1ª geração) e similares |
+| `prefers-reduced-motion` | Animações desligadas e canvas global oculto |
+
+Detalhes técnicos relevantes:
+
+- Nav: `overflow-x: auto`, `flex-wrap: nowrap`, `scrollbar-width: none`
+  e `::-webkit-scrollbar { display: none }` para esconder a barra.
+- `min-height: 44px` em `.cad-submit`, `.entregavel-cta` e
+  `.checkout-pix-copy` para atender o requisito mínimo de toque.
+- `@media (prefers-reduced-motion: reduce)` força
+  `animation-duration: 0.001ms` em todos os elementos e some com o
+  `#graph-canvas` para usuários com a opção do SO ligada.
+
+Verificado no preview local em viewport 215×688 px e na produção
+após o deploy do commit `022aa74`. Tamanho do `assets/styles.css`
+saiu de 55 897 b → 61 143 b (~5 KB de regras de breakpoint).
+
+---
+
+## 13. Skill `registrar-deploy`
+
+Skill nova em `.claude/skills/registrar-deploy/SKILL.md` que codifica
+o ciclo seguido neste projeto: levantar delta entre `git log` e os
+markdowns de changelog, escrever a seção certa em
+`alteracoesca.md` (não-pagamento) ou `zoop2.md` (pagamento), commit
+com footer `Alterado por Franklin G Mendes`, push para `main`,
+acompanhar o run do workflow `Deploy HostGator + Supabase` e
+verificar produção com User-Agent realista.
+
+Inclui cheatsheet, tabela de erros recorrentes e exemplos de comando
+para health check via `curl`. Sem emojis, em português.
+
+A skill é local ao repositório (`.claude/skills/`), portanto não
+fica visível para outras instalações até ser explicitamente
+registrada como skill global.
