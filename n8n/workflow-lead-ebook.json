@@ -1,0 +1,113 @@
+{
+  "name": "Método CA — Lead Ebook",
+  "nodes": [
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Webhook — Lead Ebook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "lead-metodo-ca",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-metodo-ca",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0002-0002-0002-000000000002",
+      "name": "SendGrid — Email ao Lead",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 1,
+      "position": [560, 100],
+      "parameters": {
+        "operation": "send",
+        "fromEmail": "CONFIGURE: seu-remetente@dominio.com",
+        "toEmail": "={{ $json.body.email }}",
+        "subject": "={{ '📥 Seu ebook ' + $json.body.titulo_ebook + ' chegou!' }}",
+        "contentType": "html",
+        "htmlContent": "=<!DOCTYPE html><html lang='pt-BR'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'></head><body style='margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f4f4f4;padding:40px 20px;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#fff;border-radius:12px;overflow:hidden;max-width:600px;'><tr><td style='background:#1a1a2e;padding:32px;text-align:center;'><h1 style='color:#fff;margin:0;font-size:28px;letter-spacing:1px;'>Método C.A</h1><p style='color:#a0a0c0;margin:8px 0 0;font-size:14px;'>Inteligência Artificial na prática</p></td></tr><tr><td style='padding:40px 48px;'><h2 style='color:#1a1a2e;font-size:22px;margin:0 0 16px;'>Olá, {{ $json.body.nome }}! 👋</h2><p style='color:#555;font-size:16px;line-height:1.7;margin:0 0 8px;'>Seu ebook <strong>{{ $json.body.titulo_ebook }}</strong> está pronto para download.</p><p style='color:#555;font-size:16px;line-height:1.7;margin:0 0 32px;'>Clique no botão abaixo para acessar agora mesmo.</p><table width='100%' cellpadding='0' cellspacing='0'><tr><td align='center' style='padding:8px 0 32px;'><a href='{{ $json.body.url_download }}' style='background:#6c63ff;color:#fff;text-decoration:none;padding:16px 40px;border-radius:8px;font-size:18px;font-weight:bold;display:inline-block;'>📥 Baixar meu ebook</a></td></tr></table><p style='color:#888;font-size:13px;line-height:1.6;margin:0;'>Se o botão não funcionar, copie e cole o link no seu navegador:<br><a href='{{ $json.body.url_download }}' style='color:#6c63ff;word-break:break-all;'>{{ $json.body.url_download }}</a></p></td></tr><tr><td style='background:#f9f9f9;padding:24px 48px;border-top:1px solid #eee;text-align:center;'><p style='color:#aaa;font-size:12px;margin:0;'>Você recebeu este email porque se cadastrou no site Método C.A.<br>© 2026 Método C.A — Todos os direitos reservados.</p></td></tr></table></td></tr></table></body></html>",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "sendGridApi": {
+          "id": "CONFIGURE",
+          "name": "SendGrid — Método CA"
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0003-0003-0003-000000000003",
+      "name": "RD Station — Registrar Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [560, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.rd.services/platform/conversions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer CONFIGURE: SEU_TOKEN_RD_STATION"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"event_type\": \"CONVERSION\", \"event_family\": \"CDP\", \"payload\": { \"conversion_identifier\": \"Lead Ebook Método CA\", \"name\": $json.body.nome, \"email\": $json.body.email, \"mobile_phone\": $json.body.telefone, \"job_title\": $json.body.ocupacao, \"traffic_source\": $json.body.origem } }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0004-0004-0004-000000000004",
+      "name": "WhatsApp — Notificar Admin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [560, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/CONFIGURE_PHONE_NUMBER_ID/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer CONFIGURE: SEU_ACCESS_TOKEN_META"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"messaging_product\": \"whatsapp\", \"to\": \"CONFIGURE_SEU_NUMERO_55119XXXXXXXX\", \"type\": \"text\", \"text\": { \"preview_url\": false, \"body\": \"🔔 *Novo Lead — Método C.A*\\n\\n👤 Nome: \" + $json.body.nome + \"\\n📧 Email: \" + $json.body.email + \"\\n📱 Telefone: \" + $json.body.telefone + \"\\n💼 Ocupação: \" + $json.body.ocupacao + \"\\n📅 Em: \" + new Date($json.body.criado_em).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'}) } }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Lead Ebook": {
+      "main": [
+        [
+          { "node": "SendGrid — Email ao Lead",    "type": "main", "index": 0 },
+          { "node": "RD Station — Registrar Lead", "type": "main", "index": 0 },
+          { "node": "WhatsApp — Notificar Admin",  "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}

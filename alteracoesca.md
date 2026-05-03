@@ -23,6 +23,7 @@
 12. [Responsividade mobile-first](#12-responsividade-mobile-first)
 13. [Skill `registrar-deploy`](#13-skill-registrar-deploy)
 14. [Migração do site para ca.franklingmendes.com](#14-migração-do-site-para-cafranklingmendescom)
+15. [Automação webhook n8n — lead ebook](#15-automação-webhook-n8n--lead-ebook)
 
 ---
 
@@ -391,3 +392,76 @@ Passos manuais necessários (executados pelo Franklin no cPanel da HostGator):
 
 O GitHub Pages passará a usar o novo CNAME automaticamente no próximo
 deploy disparado pelo push do commit `83085a5`.
+
+---
+
+## 15. Automação webhook n8n — lead ebook
+
+Quando um visitante preenche o formulário de cadastro para o ebook
+gratuito em `/cadastro/`, a edge function `submit-lead` agora dispara
+um webhook para o n8n self-hosted (fire-and-forget — não bloqueia a
+resposta ao cliente).
+
+### Mudanças na edge function
+
+**`supabase/functions/submit-lead/index.ts`** ganhou a função
+`fireWebhook()`, chamada após o INSERT na tabela `leads`:
+
+- Lê a URL do webhook do secret `N8N_WEBHOOK_LEAD_URL` (Supabase
+  Secrets). Se o secret não estiver definido, a função retorna sem
+  erro — o lead já está salvo.
+- Usa `fetch()` sem `await` para não atrasar a resposta ao formulário.
+- Falha silenciosa com `console.error` — o lead nunca é perdido mesmo
+  se o n8n estiver fora do ar.
+- Payload enviado ao n8n:
+
+```json
+{
+  "nome":         "João Silva",
+  "email":        "joao@email.com",
+  "telefone":     "11999999999",
+  "ocupacao":     "desenvolvedor",
+  "origem":       "site_metodo_ca",
+  "url_download": "https://...supabase.co/storage/v1/.../ebook.pdf",
+  "titulo_ebook": "Obsidian — Segundo Cérebro para Claude",
+  "criado_em":    "2026-05-03T12:00:00.000Z"
+}
+```
+
+### Workflow n8n
+
+Arquivo **`n8n/workflow-lead-ebook.json`** — importável diretamente
+no n8n (Workflows → Import from file). Três nós correm em paralelo
+após o trigger:
+
+| Nó | Serviço | O que faz |
+|---|---|---|
+| SendGrid — Email ao Lead | SendGrid API | Envia email HTML com botão de download do ebook para o lead |
+| RD Station — Registrar Lead | RD Station Platform API | Registra conversão `Lead Ebook Método CA` com nome, email, telefone e ocupação |
+| WhatsApp — Notificar Admin | Meta Graph API v20 | Envia mensagem de texto ao número do admin com resumo do lead |
+
+### Configuração necessária (única vez)
+
+```bash
+# 1. Registrar o secret com a URL gerada pelo n8n
+supabase secrets set N8N_WEBHOOK_LEAD_URL=https://SEU-N8N.com/webhook/lead-metodo-ca
+
+# 2. Re-deployar a edge function
+supabase functions deploy submit-lead
+```
+
+Dentro do workflow importado, substituir os quatro placeholders
+marcados com `CONFIGURE`:
+
+| Campo | Onde encontrar |
+|---|---|
+| `fromEmail` | Remetente verificado no SendGrid |
+| Credencial SendGrid | n8n → Credentials → SendGrid |
+| `Bearer SEU_TOKEN_RD_STATION` | RD Station → Integrações → Token da API |
+| `CONFIGURE_PHONE_NUMBER_ID` | Meta Business → WhatsApp → Phone Number ID |
+| `Bearer SEU_ACCESS_TOKEN_META` | Meta Business → System User → Access Token permanente |
+| `CONFIGURE_SEU_NUMERO_55119…` | Número do admin em formato E.164 sem `+` |
+
+> Para envio proativo via WhatsApp a números fora da janela de 24 h,
+> criar um template aprovado no Meta Business e substituir
+> `"type": "text"` por `"type": "template"` no nó correspondente.
