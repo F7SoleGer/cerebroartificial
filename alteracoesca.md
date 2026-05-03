@@ -3,7 +3,7 @@
 > Tudo o que foi alterado nas últimas sessões e **não** se refere ao
 > gateway Hubmais/Zoop. As mudanças relacionadas a pagamento estão
 > documentadas em [`zoop2.md`](zoop2.md).
-> Última atualização: 01/05/2026.
+> Última atualização: 03/05/2026.
 
 ---
 
@@ -22,6 +22,7 @@
 11. [Domínio franklingmendes.com e pipeline HostGator](#11-domínio-franklingmendescom-e-pipeline-hostgator)
 12. [Responsividade mobile-first](#12-responsividade-mobile-first)
 13. [Skill `registrar-deploy`](#13-skill-registrar-deploy)
+14. [Migração do site para ca.franklingmendes.com](#14-migração-do-site-para-cafranklingmendescom)
 
 ---
 
@@ -365,3 +366,28 @@ para health check via `curl`. Sem emojis, em português.
 A skill é local ao repositório (`.claude/skills/`), portanto não
 fica visível para outras instalações até ser explicitamente
 registrada como skill global.
+
+---
+
+## 14. Migração do site para ca.franklingmendes.com
+
+O conteúdo do Método C.A, que estava no domínio raiz
+`franklingmendes.com`, foi movido para o subdomínio
+**`ca.franklingmendes.com`**. O domínio raiz ficou livre para hospedar
+outro conteúdo futuro — sem redirect entre os dois.
+
+Mudanças aplicadas:
+
+| Arquivo | Antes | Depois |
+|---|---|---|
+| `CNAME` | `franklingmendes.com` | `ca.franklingmendes.com` |
+
+Passos manuais necessários (executados pelo Franklin no cPanel da HostGator):
+
+1. Criação do subdomínio `ca.franklingmendes.com` em cPanel → Subdomains,
+   com a pasta de destino anotada.
+2. Atualização do secret `CPANEL_DEPLOY_DIR` no GitHub → Settings →
+   Actions Secrets para apontar para a nova pasta do subdomínio.
+
+O GitHub Pages passará a usar o novo CNAME automaticamente no próximo
+deploy disparado pelo push do commit `83085a5`.
