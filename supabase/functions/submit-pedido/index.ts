@@ -7,10 +7,15 @@
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { getServiceClient } from "../_shared/hubmais.ts";
+import { makeLogger, maskEmail, newTxId } from "../_shared/log.ts";
+import { fireCompraWebhook } from "../_shared/webhook-compra.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405, headers: corsHeaders });
+
+  const txId = req.headers.get("X-Tx-Id") ?? newTxId();
+  const log = makeLogger("submit-pedido", txId);
 
   try {
     const b = await req.json();
@@ -38,15 +43,35 @@ Deno.serve(async (req) => {
       .single();
     if (error) throw new Error(`pedidos insert: ${error.message}`);
 
+    log.info("pedido criado", {
+      pedido_id: data.id,
+      email: maskEmail(b.email),
+      produto_slug: b.produto_slug,
+      forma_pagamento: b.forma_pagamento,
+    });
+
+    if (b.forma_pagamento === "gratuito") {
+      fireCompraWebhook({
+        id: data.id,
+        nome: String(b.nome).trim(),
+        email: String(b.email).trim(),
+        telefone: String(b.telefone ?? "").trim(),
+        produto_slug: String(b.produto_slug),
+        produto_nome: String(b.produto_nome ?? ""),
+        valor: Number(b.valor) || 0,
+        forma_pagamento: "gratuito",
+      }, txId);
+    }
+
     return new Response(
       JSON.stringify({ pedidoId: data.id }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json", "X-Tx-Id": txId } }
     );
   } catch (err) {
-    console.error("submit-pedido:", err);
+    log.error("falha", { error: (err as Error).message });
     return new Response(
       JSON.stringify({ error: (err as Error).message }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json", "X-Tx-Id": txId } }
     );
   }
 });

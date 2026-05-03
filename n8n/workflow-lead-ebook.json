@@ -92,6 +92,29 @@
         "jsonBody": "={{ JSON.stringify({ \"messaging_product\": \"whatsapp\", \"to\": \"CONFIGURE_SEU_NUMERO_55119XXXXXXXX\", \"type\": \"text\", \"text\": { \"preview_url\": false, \"body\": \"🔔 *Novo Lead — Método C.A*\\n\\n👤 Nome: \" + $json.body.nome + \"\\n📧 Email: \" + $json.body.email + \"\\n📱 Telefone: \" + $json.body.telefone + \"\\n💼 Ocupação: \" + $json.body.ocupacao + \"\\n📅 Em: \" + new Date($json.body.criado_em).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'}) } }) }}",
         "options": {}
       }
+    },
+    {
+      "id": "a1b2c3d4-0005-0005-0005-000000000005",
+      "name": "CRM Sync — Forward",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [560, 700],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_CRM_SYNC_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: $json.body }) }}",
+        "options": {
+          "response": { "response": { "neverError": true } }
+        }
+      }
     }
   ],
   "connections": {
@@ -100,7 +123,8 @@
         [
           { "node": "SendGrid — Email ao Lead",    "type": "main", "index": 0 },
           { "node": "RD Station — Registrar Lead", "type": "main", "index": 0 },
-          { "node": "WhatsApp — Notificar Admin",  "type": "main", "index": 0 }
+          { "node": "WhatsApp — Notificar Admin",  "type": "main", "index": 0 },
+          { "node": "CRM Sync — Forward",          "type": "main", "index": 0 }
         ]
       ]
     }

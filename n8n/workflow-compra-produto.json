@@ -1,0 +1,131 @@
+{
+  "name": "Método CA — Compra Aprovada",
+  "nodes": [
+    {
+      "id": "c1d2e3f4-0001-0001-0001-000000000001",
+      "name": "Webhook — Compra Aprovada",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "compra-aprovada-metodo-ca",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "compra-aprovada",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "c1d2e3f4-0002-0002-0002-000000000002",
+      "name": "Code — Enriquecer Produto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\n\nconst tiers = {\n  'conteudo-gratuito':    { tier: 1, tier_label: 'Tráfego / Isca', emoji: '📥', destaque: '' },\n  'ebook-codigos':        { tier: 2, tier_label: 'Entrada',        emoji: '📖', destaque: '' },\n  'comunidade':           { tier: 3, tier_label: 'Comunidade',     emoji: '👥', destaque: '' },\n  'curso-online':         { tier: 4, tier_label: 'Curso Online',   emoji: '🎓', destaque: 'Boa venda!' },\n  'acompanhamento-grupo': { tier: 5, tier_label: 'High Ticket',   emoji: '🚀', destaque: 'HIGH TICKET FECHADO!' },\n  'mentoria-individual':  { tier: 6, tier_label: 'Ultra High',    emoji: '💎', destaque: 'ULTRA HIGH FECHADO!' },\n};\n\nconst info = tiers[body.produto_slug] || { tier: 0, tier_label: 'Desconhecido', emoji: '❓', destaque: '' };\n\nconst valor_fmt = new Intl.NumberFormat('pt-BR', {\n  style: 'currency',\n  currency: 'BRL'\n}).format(body.valor || 0);\n\nconst aprovado_dt = new Date(body.aprovado_em);\nconst data_fmt = aprovado_dt.toLocaleString('pt-BR', {\n  timeZone: 'America/Sao_Paulo',\n  day: '2-digit', month: '2-digit', year: 'numeric',\n  hour: '2-digit', minute: '2-digit'\n});\n\nconst forma_icon = {\n  pix:      '🔷 PIX',\n  cartao:   '💳 Cartão',\n  gratuito: '🎁 Gratuito',\n  boleto:   '📄 Boleto',\n};\nconst forma_fmt = forma_icon[body.forma_pagamento] || body.forma_pagamento;\n\nconst header = info.destaque\n  ? `${info.emoji} *${info.destaque} — Método C.A*`\n  : `🔔 *Nova venda — Método C.A*`;\n\nreturn [{ json: { ...body, ...info, valor_fmt, data_fmt, forma_fmt, header } }];"
+      }
+    },
+    {
+      "id": "c1d2e3f4-0003-0003-0003-000000000003",
+      "name": "WhatsApp — Notificar Admin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 160],
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/CONFIGURE_PHONE_NUMBER_ID/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer CONFIGURE: SEU_ACCESS_TOKEN_META"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"messaging_product\": \"whatsapp\", \"to\": \"CONFIGURE_SEU_NUMERO_55119XXXXXXXX\", \"type\": \"text\", \"text\": { \"preview_url\": false, \"body\": $json.header + \"\\n\\n\" + $json.emoji + \" [Tier \" + $json.tier + \"] \" + $json.tier_label + \" — \" + $json.produto_nome + \"\\n💰 \" + $json.valor_fmt + \" via \" + $json.forma_fmt + \"\\n\\n👤 Nome: \" + $json.nome + \"\\n📧 Email: \" + $json.email + \"\\n📱 Telefone: \" + $json.telefone + \"\\n🆔 Pedido: \" + String($json.pedido_id ?? \"\").slice(0, 8) + \"\\n📅 Em: \" + $json.data_fmt } }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "c1d2e3f4-0004-0004-0004-000000000004",
+      "name": "RD Station — Registrar Compra",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 440],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.rd.services/platform/conversions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer CONFIGURE: SEU_TOKEN_RD_STATION"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"event_type\": \"CONVERSION\", \"event_family\": \"CDP\", \"payload\": { \"conversion_identifier\": \"Compra — \" + $json.produto_nome, \"name\": $json.nome, \"email\": $json.email, \"mobile_phone\": $json.telefone, \"cf_produto_slug\": $json.produto_slug, \"cf_tier\": $json.tier, \"cf_valor\": $json.valor, \"cf_forma_pagamento\": $json.forma_pagamento } }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "c1d2e3f4-0005-0005-0005-000000000005",
+      "name": "CRM Sync — Forward",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 620],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_CRM_SYNC_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: $json }) }}",
+        "options": {
+          "response": { "response": { "neverError": true } }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Compra Aprovada": {
+      "main": [
+        [
+          { "node": "Code — Enriquecer Produto", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Code — Enriquecer Produto": {
+      "main": [
+        [
+          { "node": "WhatsApp — Notificar Admin",     "type": "main", "index": 0 },
+          { "node": "RD Station — Registrar Compra",  "type": "main", "index": 0 },
+          { "node": "CRM Sync — Forward",             "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c1d2e3f4-e5f6-7890-abcd-ef1234567890"
+}

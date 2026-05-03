@@ -10,10 +10,14 @@ import {
   getOrCreateBuyer,
   getServiceClient,
 } from "../_shared/hubmais.ts";
+import { makeLogger, newTxId } from "../_shared/log.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405, headers: corsHeaders });
+
+  const txId = req.headers.get("X-Tx-Id") ?? newTxId();
+  const log = makeLogger("create-pix-payment", txId);
 
   try {
     const { pedidoId } = await req.json();
@@ -36,7 +40,7 @@ Deno.serve(async (req) => {
           transactionId: pedido.transaction_id,
           cached: true,
         }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { headers: { ...corsHeaders, "Content-Type": "application/json", "X-Tx-Id": txId } }
       );
     }
 
@@ -65,7 +69,9 @@ Deno.serve(async (req) => {
         hubmais_buyer_id: buyerId,
       })
       .eq("id", pedidoId);
-    if (updErr) console.error("update pedido pix:", updErr);
+    if (updErr) log.error("update pedido pix", { error: updErr.message });
+
+    log.info("pix gerado", { pedido_id: pedidoId, transaction_id: pix.transactionId });
 
     return new Response(
       JSON.stringify({
@@ -73,13 +79,13 @@ Deno.serve(async (req) => {
         qrcode64: pix.qrcode64,
         transactionId: pix.transactionId,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json", "X-Tx-Id": txId } }
     );
   } catch (err) {
-    console.error("create-pix-payment:", err);
+    log.error("falha", { error: (err as Error).message });
     return new Response(
       JSON.stringify({ error: (err as Error).message }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json", "X-Tx-Id": txId } }
     );
   }
 });

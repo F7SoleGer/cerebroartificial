@@ -7,23 +7,15 @@
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { getServiceClient } from "../_shared/hubmais.ts";
-
-// Dispara o webhook sem bloquear a resposta ao cliente.
-// Falha silenciosa — o lead já foi salvo, o webhook é best-effort.
-function fireWebhook(payload: Record<string, string>): void {
-  const url = Deno.env.get("N8N_WEBHOOK_LEAD_URL");
-  if (!url) return;
-
-  fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  }).catch((err) => console.error("webhook n8n:", err));
-}
+import { makeLogger, maskEmail, maskPhone, newTxId } from "../_shared/log.ts";
+import { fireLeadWebhook } from "../_shared/webhook-lead.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405, headers: corsHeaders });
+
+  const txId = req.headers.get("X-Tx-Id") ?? newTxId();
+  const log = makeLogger("submit-lead", txId);
 
   try {
     const body = await req.json();
@@ -51,7 +43,9 @@ Deno.serve(async (req) => {
     const ebook = ebooks?.[0];
     if (!ebook?.url_download) throw new Error("Nenhum ebook ativo cadastrado");
 
-    fireWebhook({
+    log.info("lead inserido", { email: maskEmail(email), telefone: maskPhone(telefone), origem });
+
+    fireLeadWebhook({
       nome,
       email,
       telefone,
@@ -59,18 +53,17 @@ Deno.serve(async (req) => {
       origem,
       url_download: ebook.url_download,
       titulo_ebook: ebook.titulo ?? "Método C.A",
-      criado_em: new Date().toISOString(),
-    });
+    }, txId);
 
     return new Response(
       JSON.stringify(ebook),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json", "X-Tx-Id": txId } }
     );
   } catch (err) {
-    console.error("submit-lead:", err);
+    log.error("falha", { error: (err as Error).message });
     return new Response(
       JSON.stringify({ error: (err as Error).message }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json", "X-Tx-Id": txId } }
     );
   }
 });

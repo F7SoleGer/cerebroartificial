@@ -24,6 +24,8 @@
 13. [Skill `registrar-deploy`](#13-skill-registrar-deploy)
 14. [Migração do site para ca.franklingmendes.com](#14-migração-do-site-para-cafranklingmendescom)
 15. [Automação webhook n8n — lead ebook](#15-automação-webhook-n8n--lead-ebook)
+16. [Automação webhook n8n — compra aprovada (escala de valor)](#16-automação-webhook-n8n--compra-aprovada-escala-de-valor)
+17. [PRD V1.0 — Integração RD Station CRM (Fase 1 + hardening)](#17-prd-v10--integração-rd-station-crm-fase-1--hardening)
 
 ---
 
@@ -465,3 +467,259 @@ marcados com `CONFIGURE`:
 > Para envio proativo via WhatsApp a números fora da janela de 24 h,
 > criar um template aprovado no Meta Business e substituir
 > `"type": "text"` por `"type": "template"` no nó correspondente.
+
+---
+
+## 16. Automação webhook n8n — compra aprovada (escala de valor)
+
+Quando qualquer pedido é aprovado — independente do produto ou forma de
+pagamento — as edge functions disparam um webhook para o n8n, que envia
+uma notificação de WhatsApp ao admin com a mensagem adaptada ao tier da
+escala de valor.
+
+### Onde o webhook é disparado
+
+| Edge function | Gatilho |
+|---|---|
+| `check-pix-status` | PIX confirmado pelo gateway (`tx.status === "succeeded"\|"approved"`) |
+| `create-credit-payment` | Cartão aprovado (`result.status === "succeeded"\|"authorized"`) |
+| `submit-pedido` | Produto gratuito (`forma_pagamento === "gratuito"`) |
+
+### Arquivo compartilhado novo
+
+**`supabase/functions/_shared/webhook-compra.ts`** — exporta
+`fireCompraWebhook(pedido)`. Lê `N8N_WEBHOOK_COMPRA_URL` do ambiente
+Supabase e faz POST fire-and-forget. Sem await — falha silenciosa com
+`console.error`.
+
+### Payload enviado ao n8n
+
+```json
+{
+  "pedido_id":       "uuid do pedido (8 primeiros chars no WhatsApp)",
+  "nome":            "João Silva",
+  "email":           "joao@email.com",
+  "telefone":        "11999999999",
+  "produto_slug":    "mentoria-individual",
+  "produto_nome":    "Mentoria Individual",
+  "valor":           4997.00,
+  "forma_pagamento": "pix",
+  "aprovado_em":     "2026-05-03T15:30:00.000Z"
+}
+```
+
+### Workflow n8n
+
+Arquivo **`n8n/workflow-compra-produto.json`** — importável. Três nós:
+
+| Nó | Serviço | O que faz |
+|---|---|---|
+| Code — Enriquecer Produto | JavaScript | Mapeia `produto_slug` → tier, emoji, label e monta mensagem de acordo com o nível |
+| WhatsApp — Notificar Admin | Meta Graph API v20 | Envia mensagem adaptada ao tier (ex.: "🚀 HIGH TICKET FECHADO!" para tier 5) |
+| RD Station — Registrar Compra | RD Station Platform API | Registra conversão `"Compra — <produto_nome>"` com campos personalizados de tier e valor |
+
+Os nós WhatsApp e RD Station rodam **em paralelo** após o Code.
+
+### Mapeamento da escala de valor
+
+| Slug | Tier | Label | Emoji | Destaque na mensagem |
+|---|---|---|---|---|
+| `conteudo-gratuito` | 1 | Tráfego / Isca | 📥 | _(sem destaque)_ |
+| `ebook-codigos` | 2 | Entrada | 📖 | _(sem destaque)_ |
+| `comunidade` | 3 | Comunidade | 👥 | _(sem destaque)_ |
+| `curso-online` | 4 | Curso Online | 🎓 | Boa venda! |
+| `acompanhamento-grupo` | 5 | High Ticket | 🚀 | HIGH TICKET FECHADO! |
+| `mentoria-individual` | 6 | Ultra High | 💎 | ULTRA HIGH FECHADO! |
+
+### Configuração necessária (única vez)
+
+```bash
+# 1. Registrar o secret com a URL gerada pelo n8n
+supabase secrets set N8N_WEBHOOK_COMPRA_URL=https://SEU-N8N.com/webhook/compra-aprovada
+
+# 2. Re-deployar as três edge functions afetadas
+supabase functions deploy check-pix-status
+supabase functions deploy create-credit-payment
+supabase functions deploy submit-pedido
+```
+
+Dentro do workflow importado, substituir os placeholders `CONFIGURE`:
+
+| Campo | Onde encontrar |
+|---|---|
+| `CONFIGURE_PHONE_NUMBER_ID` | Meta Business → WhatsApp → Phone Number ID |
+| `Bearer SEU_ACCESS_TOKEN_META` | Meta Business → System User → Access Token permanente |
+| `CONFIGURE_SEU_NUMERO_55119…` | Número do admin em formato E.164 sem `+` |
+| `Bearer SEU_TOKEN_RD_STATION` | RD Station → Integrações → Token da API |
+
+---
+
+## 17. PRD V1.0 — Integração RD Station CRM (Fase 1 + hardening)
+
+PRD de referência: `PRD_Integracao_RDStation_CRM.docx` (Versão 1.0,
+03/05/2026). Documento descreve um roadmap de **20 semanas em 5 fases**
+para integração bidirecional com **RD Station CRM** (`crm.rdstation.com`)
+cobrindo Negociações, Empresas, Contatos, Tarefas e Análises.
+
+Esta rodada entrega **Fase 1 enxuta** + hardening transversal aplicável
+hoje. Itens fora desta rodada estão na seção "Pendente" abaixo.
+
+### 17.1 Distinção RD Marketing vs RD CRM
+
+Os workflows existentes (`workflow-lead-ebook.json` e
+`workflow-compra-produto.json`) integram com **RD Station Marketing**
+(`api.rd.services/platform/conversions`) — produto de automação de
+marketing. O PRD requer **RD Station CRM** (`crm.rdstation.com/api/v1`)
+— produto de pipeline de vendas. São APIs distintas; mantemos o RD
+Marketing existente e adicionamos RD CRM em paralelo.
+
+### 17.2 Novo workflow — `workflow-crm-rd-station.json`
+
+Webhook único em `/webhook/crm-sync` que recebe payload de lead **ou**
+de compra (detectado pela presença de `pedido_id`). Encadeamento:
+
+```
+Webhook → Code (mapear tier→estágio) → RD CRM Upsert Contato
+                                    └→ If kind=compra → RD CRM Criar Negociação
+```
+
+**Mapeamento da escada de valor → estágio do funil RD CRM:**
+
+| Slug                 | Tier | Estágio sugerido         |
+|----------------------|------|--------------------------|
+| conteudo-gratuito    | 1    | Sem contato              |
+| ebook-codigos        | 2    | Contato feito            |
+| comunidade           | 3    | Contato feito            |
+| curso-online         | 4    | Identificação do interesse |
+| acompanhamento-grupo | 5    | Apresentação             |
+| mentoria-individual  | 6    | Apresentação             |
+
+Os IDs reais de estágio (`CONFIGURE_STAGE_*`) precisam ser substituídos
+no nó `Code — Mapear Tier e Estágio` consultando o funil real do CRM
+via `GET /api/v1/deal_stages?token=...`.
+
+**Payload Contato** (POST /api/v1/contacts):
+```json
+{ "contact": { "name": "...", "emails": [{...}], "phones": [{...}], "title": "..." } }
+```
+
+**Payload Negociação** (POST /api/v1/deals):
+```json
+{
+  "deal": { "name": "...", "deal_stage_id": "...", "user_id": "..." },
+  "deal_products": [{ "name": "...", "amount": 1, "price": 4997 }],
+  "deal_custom_fields": [
+    { "custom_field_id": "...", "value": "5" },
+    { "custom_field_id": "...", "value": "pix" },
+    { "custom_field_id": "...", "value": "<pedido_id>" }
+  ]
+}
+```
+
+Atende RF-01, RF-02, RF-04, RF-09 do PRD.
+
+### 17.3 Forwarding dos workflows existentes
+
+`workflow-lead-ebook.json` e `workflow-compra-produto.json` ganharam o
+nó **CRM Sync — Forward** que faz POST do payload já enriquecido para
+`{{ $env.N8N_CRM_SYNC_URL }}`. Roda em paralelo aos nós existentes
+(SendGrid, WhatsApp, RD Marketing) — sem bloquear nem alterar o que já
+funciona.
+
+### 17.4 Hardening transversal (PRD §5.3, §7.3, §7.4)
+
+#### Logs JSON estruturados + máscara de PII
+
+Novo arquivo **`supabase/functions/_shared/log.ts`** exporta:
+
+- `newTxId()` — UUID v4 para correlacionar uma chamada em todos os
+  hops (edge function → webhook → n8n).
+- `makeLogger(fn, txId)` — emite linhas JSON com `ts`, `level`, `fn`,
+  `tx_id`, `msg` e campos arbitrários. Substitui `console.error("xxx:", err)`
+  cru em todos os endpoints.
+- `maskEmail("joao@dominio.com")` → `"jo*****@dominio.com"`
+- `maskDoc("12345678901")` → `"*******8901"`
+- `maskPhone("11999998888")` → `"*******8888"`
+
+Aplicado em **todos** os endpoints (`submit-lead`, `submit-pedido`,
+`create-pix-payment`, `create-credit-payment`, `check-pix-status`) e nos
+webhooks de saída. Cada resposta HTTP devolve o `X-Tx-Id` no header,
+para o frontend correlacionar com o suporte se necessário.
+
+#### Assinatura HMAC nos webhooks de saída
+
+Novo arquivo **`supabase/functions/_shared/hmac.ts`** com
+`computeHmac(secret, body)` e `verifyHmac({...})` (comparação em tempo
+constante). Os payloads enviados ao n8n (`webhook-compra` e novo
+`webhook-lead`) levam header `X-Signature: sha256=<hex>`, calculado
+sobre o corpo exato.
+
+Configurar:
+```bash
+supabase secrets set N8N_WEBHOOK_SECRET=$(openssl rand -hex 32)
+```
+
+No n8n, validar a assinatura num nó Code antes de processar:
+```js
+const crypto = require('crypto');
+const expected = 'sha256=' + crypto
+  .createHmac('sha256', $env.N8N_WEBHOOK_SECRET)
+  .update(JSON.stringify($json.body))
+  .digest('hex');
+if (expected !== $('Webhook').first().headers['x-signature']) {
+  throw new Error('assinatura inválida');
+}
+```
+
+Se `N8N_WEBHOOK_SECRET` não estiver setado, o header é omitido — modo
+backward-compatible até o secret ser provisionado.
+
+#### Refatoração `submit-lead` → `webhook-lead.ts`
+
+A função inline `fireWebhook` em `submit-lead/index.ts` foi extraída
+para `supabase/functions/_shared/webhook-lead.ts`, espelhando o padrão
+de `webhook-compra.ts`. Mesma assinatura HMAC + logs estruturados.
+
+### 17.5 Configuração necessária (única vez)
+
+```bash
+# Supabase secrets
+supabase secrets set N8N_WEBHOOK_SECRET=$(openssl rand -hex 32)
+
+# Re-deploy
+supabase functions deploy submit-lead
+supabase functions deploy submit-pedido
+supabase functions deploy create-pix-payment
+supabase functions deploy create-credit-payment
+supabase functions deploy check-pix-status
+```
+
+No n8n:
+
+| Variável de ambiente   | Onde encontrar / como gerar                                    |
+|------------------------|----------------------------------------------------------------|
+| `RD_STATION_CRM_TOKEN` | RD Station CRM → Configurações → Integrações → Token API       |
+| `N8N_CRM_SYNC_URL`     | URL pública do webhook do `workflow-crm-rd-station` (após import) |
+| `N8N_WEBHOOK_SECRET`   | Mesmo segredo configurado no Supabase                          |
+
+E no nó Code do `workflow-crm-rd-station.json`, substituir os
+`CONFIGURE_STAGE_*` pelos IDs reais dos estágios do funil e
+`CONFIGURE_USER_ID_RESPONSAVEL` / `CONFIGURE_CF_*` pelos IDs do CRM.
+
+### 17.6 Pendente (fora desta rodada — fases 2–5 do PRD)
+
+- **OAuth 2.0** com refresh token e armazenamento criptografado
+  AES-256 (PRD §5.3) — hoje usamos o token API simples por query
+  string, suficiente para Fase 1.
+- **Fila persistente** Redis/RabbitMQ com retry exponencial (§7.2) —
+  hoje fire-and-forget sem persistência, basta para volumes baixos.
+- **Sincronização bidirecional** RD CRM → sistema interno (§4.1) —
+  exige expor um endpoint Supabase para receber webhooks do CRM e
+  validar HMAC entrante. O scaffolding (`hmac.verifyHmac`) já existe.
+- **Módulo Empresas** (§4.2) com merge por CNPJ.
+- **Módulo Tarefas** (§4.4) com 7 tipos mapeados.
+- **Módulo Análises** (§4.5) — dashboard interno consumindo
+  `/api/v1/reports/*`.
+- **Importação CSV/Excel** em lote de contatos (§4.3, RF-10).
+- **Resolução de conflitos** por timestamp em sync bidirecional (§5.2).
+- **Dashboard de monitoramento** com SLA 99,5% (§7.4).

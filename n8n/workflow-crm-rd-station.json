@@ -1,0 +1,123 @@
+{
+  "name": "Método CA — RD Station CRM Sync",
+  "nodes": [
+    {
+      "id": "b2c3d4e5-0001-0001-0001-000000000001",
+      "name": "Webhook — CRM Sync",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "crm-sync-metodo-ca",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "crm-sync",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "b2c3d4e5-0002-0002-0002-000000000002",
+      "name": "Code — Mapear Tier e Estágio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || {};\nconst kind = body.pedido_id ? 'compra' : 'lead';\n\n// Mapeamento da escada de valor → estágio do funil RD Station CRM.\n// Ajustar os IDs de estágio conforme o funil real do CRM (substituir CONFIGURE_*).\nconst tierMap = {\n  'conteudo-gratuito':    { tier: 1, tier_label: 'Tráfego / Isca',  stage_id: 'CONFIGURE_STAGE_SEM_CONTATO' },\n  'ebook-codigos':        { tier: 2, tier_label: 'Entrada',         stage_id: 'CONFIGURE_STAGE_CONTATO_FEITO' },\n  'comunidade':           { tier: 3, tier_label: 'Comunidade',      stage_id: 'CONFIGURE_STAGE_CONTATO_FEITO' },\n  'curso-online':         { tier: 4, tier_label: 'Curso Online',    stage_id: 'CONFIGURE_STAGE_IDENTIFICACAO' },\n  'acompanhamento-grupo': { tier: 5, tier_label: 'High Ticket',     stage_id: 'CONFIGURE_STAGE_APRESENTACAO' },\n  'mentoria-individual':  { tier: 6, tier_label: 'Ultra High',      stage_id: 'CONFIGURE_STAGE_APRESENTACAO' },\n};\n\nconst tierInfo = tierMap[body.produto_slug] || { tier: 0, tier_label: 'Lead', stage_id: 'CONFIGURE_STAGE_SEM_CONTATO' };\n\nconst phoneDigits = String(body.telefone || '').replace(/\\D/g, '');\n\n// Payload para POST /api/v1/contacts (RD Station CRM)\nconst contactPayload = {\n  contact: {\n    name: body.nome,\n    emails: body.email ? [{ email: body.email }] : [],\n    phones: phoneDigits ? [{ phone: phoneDigits, type: 'cellphone' }] : [],\n    title: body.ocupacao || undefined,\n  }\n};\n\n// Payload para POST /api/v1/deals (apenas em compra)\nconst dealPayload = kind === 'compra' ? {\n  deal: {\n    name: `${body.produto_nome} — ${body.nome}`,\n    deal_stage_id: tierInfo.stage_id,\n    user_id: 'CONFIGURE_USER_ID_RESPONSAVEL',\n  },\n  deal_products: [{\n    name: body.produto_nome,\n    amount: 1,\n    price: body.valor,\n  }],\n  deal_custom_fields: [\n    { custom_field_id: 'CONFIGURE_CF_TIER',            value: String(tierInfo.tier) },\n    { custom_field_id: 'CONFIGURE_CF_FORMA_PAGAMENTO', value: body.forma_pagamento },\n    { custom_field_id: 'CONFIGURE_CF_PEDIDO_ID',       value: body.pedido_id },\n  ]\n} : null;\n\nreturn [{\n  json: {\n    kind,\n    tx_id: body.tx_id || null,\n    raw: body,\n    contactPayload,\n    dealPayload,\n    tierInfo,\n  }\n}];"
+      }
+    },
+    {
+      "id": "b2c3d4e5-0003-0003-0003-000000000003",
+      "name": "RD CRM — Upsert Contato",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://crm.rdstation.com/api/v1/contacts?token={{ $env.RD_STATION_CRM_TOKEN }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.contactPayload) }}",
+        "options": {
+          "response": { "response": { "neverError": true } },
+          "retry": { "tries": 3, "waitBetweenTries": 2000 }
+        }
+      }
+    },
+    {
+      "id": "b2c3d4e5-0004-0004-0004-000000000004",
+      "name": "If — É Compra?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "loose" },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $('Code — Mapear Tier e Estágio').item.json.kind }}",
+              "rightValue": "compra",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b2c3d4e5-0005-0005-0005-000000000005",
+      "name": "RD CRM — Criar Negociação",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1140, 240],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://crm.rdstation.com/api/v1/deals?token={{ $env.RD_STATION_CRM_TOKEN }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Code — Mapear Tier e Estágio').item.json.dealPayload) }}",
+        "options": {
+          "response": { "response": { "neverError": true } },
+          "retry": { "tries": 3, "waitBetweenTries": 2000 }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — CRM Sync": {
+      "main": [
+        [{ "node": "Code — Mapear Tier e Estágio", "type": "main", "index": 0 }]
+      ]
+    },
+    "Code — Mapear Tier e Estágio": {
+      "main": [
+        [
+          { "node": "RD CRM — Upsert Contato", "type": "main", "index": 0 },
+          { "node": "If — É Compra?",          "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "If — É Compra?": {
+      "main": [
+        [{ "node": "RD CRM — Criar Negociação", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b2c3d4e5-e5f6-7890-abcd-ef1234567890"
+}
